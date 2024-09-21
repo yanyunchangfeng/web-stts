@@ -27,9 +27,7 @@ class WebRTCService {
     if (audioTracks[0].enabled === false) {
       audioTracks[0].enabled = true;
     }
-    this.mediaRecorder = new MediaRecorder(this.stream, {
-      mimeType: 'audio/webm; codecs=opus'
-    });
+    this.mediaRecorder = new MediaRecorder(this.stream);
     this.mediaRecorder.ondataavailable = (event) => {
       this.audioChunks.push(event.data);
     };
@@ -49,8 +47,8 @@ class WebRTCService {
         this.isListening = false;
         const webmBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
         this.audioChunks = [];
-        const wavBlob = await webmToWavConverterService.getWaveBlob(webmBlob, false);
-        // const wavBlob = await webmToWavConverterService.convertWebmToWav(webmBlob);
+        // const wavBlob = await webmToWavConverterService.getWaveBlob(webmBlob, false);
+        const wavBlob = await webmToWavConverterService.convertWebmToWav(webmBlob);
         res(wavBlob);
       };
     });
