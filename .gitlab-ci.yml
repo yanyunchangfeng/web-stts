@@ -1,0 +1,19 @@
+stages:
+  - test
+
+unit-integration-e2e-test:
+  image: node:latest
+  stage: test
+  tags:
+    - coverage
+  before_script:
+    - yarn install # 安装依赖
+  script:
+    - yarn test # 运行测试脚本
+  retry: 2 # 重试次数
+  coverage: /Statements\s+:\s+([\d\.]+)%\s+\(\s*\d+\/\d+\s*\)/ # 根据你的覆盖率输出调整正则表达式
+  artifacts:
+    paths:
+      - coverage/ # 保存覆盖率报告
+    exclude:
+      - '**/node_modules/**'

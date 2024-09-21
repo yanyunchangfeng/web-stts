@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render App test render App correctly 1`] = `
+<div
+  className="sc-beySPh ixoubA"
+>
+  <div
+    className="container"
+  />
+</div>
+`;
