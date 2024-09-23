@@ -47,9 +47,11 @@ class WebRTCService {
         this.isListening = false;
         const webmBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
         this.audioChunks = [];
-        // const wavBlob = await webmToWavConverterService.getWaveBlob(webmBlob, false);
-        const wavBlob = await webmToWavConverterService.convertWebmToWav(webmBlob);
+        const wavBlob = await webmToWavConverterService.convertWebmToWav(webmBlob, 24);
+        const wavBlob2 = await webmToWavConverterService.convertWebmToWav(webmBlob, 24, { sampleRate: 96000 });
         res(wavBlob);
+        // const getWaveBlob = await webmToWavConverterService.getWaveBlob(webmBlob, false);
+        // res(getWaveBlob);
       };
     });
   }

@@ -1,100 +1,115 @@
 class WebmToWavConverterService {
+  lastAudioContextOptions?: AudioContextOptions;
   audioContext: AudioContext | null = null;
-  // 将 webm Blob 转换为 wav Blob
-  async convertWebmToWav(webmBlob: Blob): Promise<Blob> {
-    // 将 WebM Blob 转换为 ArrayBuffer
-    const arrayBuffer = await this.blobToArrayBuffer(webmBlob);
-    if (!this.audioContext) {
-      this.audioContext = new AudioContext();
+  // 将 WebM Blob 转换为 WAV Blob，增加 bitDepth 和 AudioContextOptions 参数
+  public async convertWebmToWav(
+    webmBlob: Blob,
+    bitDepth: 16 | 24 | 32 = 16,
+    options?: AudioContextOptions
+  ): Promise<Blob> {
+    console.time('convertWebmToWav');
+    // 确保位深度是支持的值
+    if (![16, 24, 32].includes(bitDepth)) {
+      throw new Error(`Unsupported bit depth: ${bitDepth}. Supported values are 16, 24, or 32.`);
     }
+    // 检查当前 AudioContext 是否已经存在以及配置是否一致
+    if (!this.audioContext || this.lastAudioContextOptions !== options) {
+      if (this.audioContext) {
+        // 关闭现有的 AudioContext
+        await this.audioContext.close();
+      }
+      // 创建新的 AudioContext
+      this.audioContext = new AudioContext(options);
+      this.lastAudioContextOptions = options; // 保存配置
+    }
+    const arrayBuffer = await webmBlob.arrayBuffer();
     const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+    const wavBlob = this.audioBufferToWav(audioBuffer, bitDepth);
 
-    // 生成 WAV 文件
-    return this.audioBufferToWav(audioBuffer);
+    console.timeEnd('convertWebmToWav');
+    return wavBlob;
   }
 
-  // 将 Blob 转换为 ArrayBuffer
-  private blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as ArrayBuffer);
-      reader.onerror = reject;
-      reader.readAsArrayBuffer(blob);
-    });
-  }
-
-  // 将 AudioBuffer 转换为 WAV Blob
-  private audioBufferToWav(audioBuffer: AudioBuffer): Blob {
+  // 将 AudioBuffer 转换为 WAV Blob，增加 bitDepth 参数
+  private audioBufferToWav(audioBuffer: AudioBuffer, bitDepth: number): Blob {
     const numOfChannels = audioBuffer.numberOfChannels;
     const sampleRate = audioBuffer.sampleRate;
-    const format = 1; // PCM
-    const bitDepth = 16;
+    console.log('sampleRate', sampleRate);
 
-    // 提取所有音频数据
-    let result;
-    const bufferLength = audioBuffer.length * numOfChannels * (bitDepth / 8);
-    const buffer = new ArrayBuffer(44 + bufferLength);
-    const view = new DataView(buffer);
+    // 根据位深度计算缓冲区大小
+    const bytesPerSample = bitDepth / 8;
+    const bufferLength = audioBuffer.length * numOfChannels * bytesPerSample;
+    const wavBuffer = new ArrayBuffer(44 + bufferLength);
+    const view = new DataView(wavBuffer);
 
-    // RIFF chunk descriptor
-    this.writeString(view, 0, 'RIFF');
-    view.setUint32(4, 36 + bufferLength, true);
-    this.writeString(view, 8, 'WAVE');
-
-    // FMT sub-chunk
-    this.writeString(view, 12, 'fmt ');
-    view.setUint32(16, 16, true); // Sub-chunk size
-    view.setUint16(20, format, true); // Audio format (1 for PCM)
-    view.setUint16(22, numOfChannels, true); // Number of channels
-    view.setUint32(24, sampleRate, true); // Sample rate
-    view.setUint32(28, sampleRate * numOfChannels * (bitDepth / 8), true); // Byte rate
-    view.setUint16(32, numOfChannels * (bitDepth / 8), true); // Block align
-    view.setUint16(34, bitDepth, true); // Bits per sample
-
-    // Data sub-chunk
-    this.writeString(view, 36, 'data');
-    view.setUint32(40, bufferLength, true);
-
-    // 写入 PCM 数据
-    if (numOfChannels === 2) {
-      result = this.interleave(audioBuffer);
-    } else {
-      result = audioBuffer.getChannelData(0);
-    }
-
-    this.floatTo16BitPCM(view, 44, result);
+    // 写入 WAV 文件头
+    this.writeWavHeader(view, numOfChannels, sampleRate, bitDepth, bufferLength);
+    // 写入音频数据
+    this.writeAudioData(view, audioBuffer, 44, bitDepth);
 
     return new Blob([view], { type: 'audio/wav' });
   }
 
-  // 将 float32 PCM 数据转换为 int16 PCM 数据
-  private floatTo16BitPCM(view: DataView, offset: number, input: Float32Array) {
-    for (let i = 0; i < input.length; i++, offset += 2) {
-      const s = Math.max(-1, Math.min(1, input[i]));
-      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-    }
+  // 写入 WAV 文件头，保持不变
+  private writeWavHeader(
+    view: DataView,
+    numOfChannels: number,
+    sampleRate: number,
+    bitDepth: number,
+    bufferLength: number
+  ) {
+    this.writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + bufferLength, true); // 文件大小
+    this.writeString(view, 8, 'WAVE');
+    this.writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true); // Sub-chunk size
+    // view.setUint16(20, 1, true); // PCM 格式
+    // view.setUint16(20, 3, true); // PCM 格式为 3 代表浮点数
+    view.setUint16(20, bitDepth === 16 ? 1 : bitDepth === 32 ? 3 : 1, true); // PCM 格式
+    view.setUint16(22, numOfChannels, true); // 通道数
+    view.setUint32(24, sampleRate, true); // 采样率
+    view.setUint32(28, sampleRate * numOfChannels * (bitDepth / 8), true); // Byte rate
+    view.setUint16(32, numOfChannels * (bitDepth / 8), true); // Block align
+    view.setUint16(34, bitDepth, true); // 位深度
+    this.writeString(view, 36, 'data');
+    view.setUint32(40, bufferLength, true); // 数据大小
   }
 
-  // 将多通道数据交错
-  private interleave(input: AudioBuffer): Float32Array {
-    const { numberOfChannels, length } = input;
-    const result = new Float32Array(length * numberOfChannels);
-    const channels = [];
-    for (let i = 0; i < numberOfChannels; i++) {
-      channels.push(input.getChannelData(i));
-    }
-    for (let i = 0, index = 0; i < length; i++) {
-      for (let j = 0; j < numberOfChannels; j++) {
-        result[index++] = channels[j][i];
+  // 写入 PCM 音频数据，修改以支持不同位深度
+  private writeAudioData(view: DataView, audioBuffer: AudioBuffer, offset: number, bitDepth: number) {
+    const numOfChannels = audioBuffer.numberOfChannels;
+
+    // 根据位深度写入音频数据
+    for (let channel = 0; channel < numOfChannels; channel++) {
+      const channelData = audioBuffer.getChannelData(channel);
+      for (let i = 0; i < channelData.length; i++) {
+        const sample = Math.max(-1, Math.min(1, channelData[i])); // 防止溢出
+
+        // 根据不同的位深度写入数据
+        if (bitDepth === 16) {
+          const intSample = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
+          view.setInt16(offset, intSample, true);
+          offset += 2;
+        } else if (bitDepth === 24) {
+          const intSample = sample < 0 ? sample * 0x800000 : sample * 0x7fffff;
+          view.setInt8(offset, intSample & 0xff);
+          view.setInt8(offset + 1, (intSample >> 8) & 0xff);
+          view.setInt8(offset + 2, (intSample >> 16) & 0xff);
+          offset += 3;
+        } else if (bitDepth === 32) {
+          // 32位浮点数处理
+          const floatSample = Math.max(-1.0, Math.min(1.0, sample)); // 限制在 -1.0 到 1.0 范围
+          view.setFloat32(offset, floatSample, true); // 使用浮点数写入
+          offset += 4;
+        }
       }
     }
-    return result;
   }
 
-  // 写入字符串到 DataView
-  private writeString(view: DataView, offset: number, string: string) {
-    for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i));
+  // 写入字符串，保持不变
+  private writeString(view: DataView, offset: number, text: string) {
+    for (let i = 0; i < text.length; i++) {
+      view.setUint8(offset + i, text.charCodeAt(i));
     }
   }
 
@@ -106,11 +121,13 @@ class WebmToWavConverterService {
    * @param contextOptions - AudioContext options for encoding
    * @returns Promise<Blob> - WAV Blob
    */
+
   public async getWaveBlob(
-    blobData: Blob,
+    blobData: Blob | Blob[],
     as32BitFloat: boolean = false,
     contextOptions?: AudioContextOptions
   ): Promise<Blob> {
+    console.time('getWaveBlob');
     const audioBuffer = await this._getAudioBuffer(blobData, contextOptions);
 
     const frameLength = audioBuffer.length;
@@ -144,7 +161,7 @@ class WebmToWavConverterService {
 
     // Write actual audio data starting at offset 44
     this._writeAudioBufferToArray(audioBuffer, waveFileData, 44, bitsPerSample);
-
+    console.timeEnd('getWaveBlob');
     return new Blob([waveFileData], { type: 'audio/wave' });
   }
   private _writeStringToArray(aString: string, targetArray: Uint8Array, offset: number): void {
@@ -207,15 +224,14 @@ class WebmToWavConverterService {
   }
 
   // Converts Blob data to AudioBuffer
-  private async _getAudioBuffer(blobData: Blob, contextOptions?: AudioContextOptions): Promise<AudioBuffer> {
-    const blob = blobData instanceof Blob ? blobData : new Blob([blobData]);
-
-    const url = URL.createObjectURL(blob);
-    const response = await fetch(url);
-    const arrayBuffer = await response.arrayBuffer();
-
+  private async _getAudioBuffer(blobData: Blob | Blob[], contextOptions?: AudioContextOptions): Promise<AudioBuffer> {
+    console.time('_getAudioBuffer');
+    const blob = blobData instanceof Blob ? blobData : new Blob(blobData);
+    const arrayBuffer = await blob.arrayBuffer();
     const audioContext = new AudioContext(contextOptions);
-    return audioContext.decodeAudioData(arrayBuffer);
+    const result = audioContext.decodeAudioData(arrayBuffer);
+    console.timeEnd('_getAudioBuffer');
+    return result;
   }
 }
 export const webmToWavConverterService = new WebmToWavConverterService();

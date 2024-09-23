@@ -1,12 +1,12 @@
-import { SpeechError, SpeechResult } from "src/shared";
+import { SpeechError, SpeechResult } from 'src/shared';
 
 class SpeechRecognizerService {
   recognition!: SpeechRecognition;
   language!: string;
   isListening = false;
-  speechRecognizerAvailable: boolean = "webkitSpeechRecognition" in window;
+  speechRecognizerAvailable: boolean = 'webkitSpeechRecognition' in window;
 
-  initialize(language = "zh-CN") {
+  initialize(language = 'zh-CN') {
     if (this.speechRecognizerAvailable) {
       this.recognition = new webkitSpeechRecognition();
       this.recognition.continuous = true;
@@ -17,7 +17,7 @@ class SpeechRecognizerService {
     return false;
   }
 
-  setLanguage(language = "zh-CN") {
+  setLanguage(language = 'zh-CN') {
     this.language = language;
     this.recognition.lang = language;
   }
@@ -30,34 +30,46 @@ class SpeechRecognizerService {
     this.recognition.start();
     this.isListening = true;
   }
-  onEnd() {
-    this.recognition.onend = () => {
-      this.isListening = false;
-    };
-  }
+  // onEnd() {
+  //   this.recognition.onend = () => {
+  //     this.isListening = false;
+  //   };
+  // }
   stop() {
     this.recognition.stop();
   }
   async onResult(): Promise<SpeechResult> {
     return new Promise((res) => {
+      let interimContent = ''; // 临时识别结果
+      let finalContent = ''; // 最终识别结果
+      let confidenceSum = 0; // 累加信心值
+      let finalCount = 0; // 最终结果计数
+      let hasFinalResult = false; // 检查是否有最终结果
+
       this.recognition.onresult = (event: SpeechRecognitionEvent) => {
-        let interimContent = ""; // 临时识别结果
-        let finalContent = ""; // 最终识别结果
-        let confidence = 0; // 识别准确率
         for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const transcript = event.results[i][0].transcript;
+          const confidence = event.results[i][0].confidence;
           if (event.results[i].isFinal) {
-            finalContent += event.results[i][0].transcript;
-            confidence += event.results[i][0].confidence;
-            console.log(finalContent, "finalContent");
-            console.log(confidence, "confidence");
+            finalContent += transcript;
+            confidenceSum += confidence;
+            finalCount++; // 统计最终结果的次数
+            hasFinalResult = true;
+            console.log(finalContent, 'finalContent');
           } else {
-            interimContent += event.results[i][0].transcript;
-            confidence += event.results[i][0].confidence;
-            console.log(interimContent, "interimContent");
-            console.log(confidence, "confidence");
+            interimContent += transcript;
+            confidenceSum += confidence;
+            console.log(interimContent, 'interimContent');
           }
         }
-        res({ interimContent, finalContent, confidence });
+      };
+      this.recognition.onend = () => {
+        this.isListening = false;
+        if (hasFinalResult) {
+          // 计算平均 confidence
+          const averageConfidence = finalCount > 0 ? confidenceSum / finalCount : confidenceSum;
+          res({ interimContent, finalContent, confidence: averageConfidence });
+        }
       };
     });
   }
@@ -65,17 +77,20 @@ class SpeechRecognizerService {
     return new Promise((res) => {
       this.recognition.onerror = (event) => {
         const eventError: string = (event as any).error;
-        console.log("error", eventError);
+        console.log('error', eventError);
         let error: SpeechError;
         switch (eventError) {
-          case "no-speech":
+          case 'no-speech':
             error = SpeechError.NoSpeech;
             break;
-          case "audio-capture":
+          case 'audio-capture':
             error = SpeechError.AudioCapture;
             break;
-          case "not-allowed":
+          case 'not-allowed':
             error = SpeechError.NotAllowed;
+            break;
+          case 'network':
+            error = SpeechError.NetWork;
             break;
           default:
             error = SpeechError.Unknown;
