@@ -1,5 +1,5 @@
 import { FC, useEffect, useMemo, useState } from 'react';
-import { Button, Input, Space } from 'antd';
+import { Button, Input } from 'antd';
 import React from 'react';
 import { TTSVoice, SpeechResult } from 'src/shared';
 import {
@@ -75,13 +75,13 @@ const SpeechButton: FC = () => {
       if (webRTCService.isListening) {
         webRTCService.stop();
         webRTCService.stopVoiceCheck();
-        toggleState(setRtcRecording);
+        setRtcRecording(false);
         return;
       }
       const success = await webRTCService.start();
       if (!success) return;
       webRTCService.checkVoice(5);
-      toggleState(setRtcRecording);
+      setRtcRecording(true);
       webRTCService.onError();
       const wavblob = await webRTCService.onResult();
       if (!wavblob) return;
@@ -95,7 +95,7 @@ const SpeechButton: FC = () => {
       console.error(err);
       webRTCService.stop();
       webRTCService.stopVoiceCheck();
-      toggleState(setRtcRecording);
+      setRtcRecording(false);
     }
   };
 
@@ -124,9 +124,7 @@ const SpeechButton: FC = () => {
   return (
     <>
       <h1>Web SpeechSynthesize API 语音测试 （底层基于浏览器语音合成引擎，无需科学上网）</h1>
-
       <Input placeholder="请输入语音内容" defaultValue={speakText} onChange={(e) => setSpeakText(e.target.value)} />
-
       <Button onClick={handleSpeechSynthesizer} style={{ marginTop: '20px' }}>
         Web SpeechSynthesize 播放语音
       </Button>

@@ -10,11 +10,27 @@ exports[`render App test render App correctly 1`] = `
     <h1>
       Web SpeechSynthesize API 语音测试 （底层基于浏览器语音合成引擎，无需科学上网）
     </h1>
+    <input
+      className="ant-input css-dev-only-do-not-override-1vebic0"
+      disabled={false}
+      onBlur={[Function]}
+      onChange={[Function]}
+      onFocus={[Function]}
+      onKeyDown={[Function]}
+      placeholder="请输入语音内容"
+      style={{}}
+      type="text"
+      value="hello world"
+    />
     <button
       className="ant-btn css-dev-only-do-not-override-1vebic0 ant-btn-default"
       disabled={false}
       onClick={[Function]}
-      style={{}}
+      style={
+        {
+          "marginTop": "20px",
+        }
+      }
       type="button"
     >
       <span>
@@ -84,6 +100,7 @@ exports[`render App test render App correctly 1`] = `
     interimContent:
     finalContent:
     confidence:0
+    speechErr:
     "
     />
     <h1>
