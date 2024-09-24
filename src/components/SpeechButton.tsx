@@ -62,16 +62,28 @@ const SpeechButton: FC = () => {
   };
 
   const handleSpeechRecognizer = () => {
+    if (!speechRecognizerService.recognition) return;
     if (speechRecognizerService.isListening) {
       speechRecognizerService.stop();
       setSpeechRecording(false);
       return;
     }
     speechRecognizerService.start();
+    setSpeechResult({
+      interimContent: '',
+      finalContent: '',
+      confidence: 0
+    });
+    setSpeechErr('');
+    speechRecognizerService.onError().then((err: any) => {
+      console.error(err);
+      setSpeechErr(err);
+      speechRecognizerService.stop();
+      setSpeechRecording(false);
+    });
     speechRecognizerService.onResult().then((data) => {
       console.log(data);
       setSpeechResult(data);
-      setSpeechErr('');
     });
 
     setSpeechRecording(true);
@@ -108,12 +120,12 @@ const SpeechButton: FC = () => {
   const initWebSpeechRecognizer = () => {
     const webSpeechReady = speechRecognizerService.initialize();
     if (webSpeechReady) {
-      speechRecognizerService.onError().then((err: any) => {
-        console.error(err);
-        setSpeechErr(err);
-        speechRecognizerService.stop();
-        setSpeechRecording(false);
-      });
+      // speechRecognizerService.onError().then((err: any) => {
+      //   console.error(err);
+      //   setSpeechErr(err);
+      //   speechRecognizerService.stop();
+      //   setSpeechRecording(false);
+      // });
       // speechRecognizerService.onResult().then((data) => {
       //   console.log(data);
       //   setSpeechResult(data);
