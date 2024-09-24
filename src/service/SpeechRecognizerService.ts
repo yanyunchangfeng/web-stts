@@ -93,7 +93,8 @@ class SpeechRecognizerService {
             error = SpeechError.NetWork;
             break;
           default:
-            error = SpeechError.Unknown;
+            // error = SpeechError.Unknown;
+            error = eventError as any;
             break;
         }
         res(error);
