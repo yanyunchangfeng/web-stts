@@ -1,5 +1,5 @@
 import { FC, useEffect, useMemo, useState } from 'react';
-import { Button, Input } from 'antd';
+import { Button, Input, Space } from 'antd';
 import React from 'react';
 import { TTSVoice, SpeechResult } from 'src/shared';
 import {
@@ -13,11 +13,13 @@ import { toggleState } from 'src/utils';
 
 const SpeechButton: FC = () => {
   const [speechRecording, setSpeechRecording] = useState(false);
+  const [speakText, setSpeakText] = useState('hello world');
   const [speechResult, setSpeechResult] = useState<SpeechResult>({
     interimContent: '',
     finalContent: '',
     confidence: 0
   });
+  const [speechErr, setSpeechErr] = useState('');
   const [rtcResultText, setRtcResultText] = useState<string>('');
   const speechResultText = useMemo(() => {
     const { interimContent, finalContent, confidence } = speechResult;
@@ -25,8 +27,9 @@ const SpeechButton: FC = () => {
     interimContent:${interimContent}
     finalContent:${finalContent}
     confidence:${confidence}
+    speechErr:${speechErr}
     `;
-  }, [speechResult]);
+  }, [speechResult, speechErr]);
   const [rtcRecording, setRtcRecording] = useState(false);
   const speechRecordingText = useMemo(() => {
     return speechRecording ? '停止录音' : '开始录音';
@@ -36,12 +39,12 @@ const SpeechButton: FC = () => {
   }, [rtcRecording]);
 
   const handleSpeechSynthesizer = async () => {
-    return speechSynthesizerService.speak('hello world');
+    return speechSynthesizerService.speak(speakText);
   };
 
   const handleTTS = async () => {
     await ttsService.speak({
-      text: 'hello world',
+      text: speakText,
       // voc: TTSVoice.man,
       voc: TTSVoice.woman
     });
@@ -61,11 +64,11 @@ const SpeechButton: FC = () => {
   const handleSpeechRecognizer = () => {
     if (speechRecognizerService.isListening) {
       speechRecognizerService.stop();
-      toggleState(setSpeechRecording);
+      setSpeechRecording(false);
       return;
     }
     speechRecognizerService.start();
-    toggleState(setSpeechRecording);
+    setSpeechRecording(true);
   };
   const handleSTT = async () => {
     try {
@@ -99,14 +102,16 @@ const SpeechButton: FC = () => {
   const initWebSpeechRecognizer = () => {
     const webSpeechReady = speechRecognizerService.initialize();
     if (webSpeechReady) {
-      speechRecognizerService.onError().then((err) => {
+      speechRecognizerService.onError().then((err: any) => {
         console.error(err);
+        setSpeechErr(err);
         speechRecognizerService.stop();
-        toggleState(setSpeechRecording);
+        setSpeechRecording(false);
       });
       speechRecognizerService.onResult().then((data) => {
         console.log(data);
         setSpeechResult(data);
+        setSpeechErr('');
       });
     } else {
       console.error('Your Browser is not supported. Please try Google Chrome.');
@@ -119,7 +124,12 @@ const SpeechButton: FC = () => {
   return (
     <>
       <h1>Web SpeechSynthesize API 语音测试 （底层基于浏览器语音合成引擎，无需科学上网）</h1>
-      <Button onClick={handleSpeechSynthesizer}>Web SpeechSynthesize 播放语音</Button>
+
+      <Input placeholder="请输入语音内容" defaultValue={speakText} onChange={(e) => setSpeakText(e.target.value)} />
+
+      <Button onClick={handleSpeechSynthesizer} style={{ marginTop: '20px' }}>
+        Web SpeechSynthesize 播放语音
+      </Button>
       <h1>TTS API 语音测试 （supcon的TTS）</h1>
       <Button onClick={handleTTS}>TTS API播放语音</Button>
       <h1>Combine TTS 语音测试（先执行supcon的TTS 捕获错误后执行浏览器语音合成引擎 提高成功率）</h1>
