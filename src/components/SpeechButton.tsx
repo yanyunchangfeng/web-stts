@@ -68,6 +68,12 @@ const SpeechButton: FC = () => {
       return;
     }
     speechRecognizerService.start();
+    speechRecognizerService.onResult().then((data) => {
+      console.log(data);
+      setSpeechResult(data);
+      setSpeechErr('');
+    });
+
     setSpeechRecording(true);
   };
   const handleSTT = async () => {
@@ -108,11 +114,11 @@ const SpeechButton: FC = () => {
         speechRecognizerService.stop();
         setSpeechRecording(false);
       });
-      speechRecognizerService.onResult().then((data) => {
-        console.log(data);
-        setSpeechResult(data);
-        setSpeechErr('');
-      });
+      // speechRecognizerService.onResult().then((data) => {
+      //   console.log(data);
+      //   setSpeechResult(data);
+      //   setSpeechErr('');
+      // });
     } else {
       console.error('Your Browser is not supported. Please try Google Chrome.');
     }
