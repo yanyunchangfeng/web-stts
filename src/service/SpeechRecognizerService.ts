@@ -39,7 +39,7 @@ class SpeechRecognizerService {
     this.recognition.stop();
   }
   async onResult(): Promise<SpeechResult> {
-    return new Promise((res) => {
+    return new Promise((res, rej) => {
       let interimContent = ''; // 临时识别结果
       let finalContent = ''; // 最终识别结果
       let confidenceSum = 0; // 累加信心值
@@ -65,10 +65,12 @@ class SpeechRecognizerService {
       };
       this.recognition.onend = () => {
         this.isListening = false;
-        if (hasFinalResult) {
+        if (hasFinalResult || interimContent) {
           // 计算平均 confidence
           const averageConfidence = finalCount > 0 ? confidenceSum / finalCount : confidenceSum;
           res({ interimContent, finalContent, confidence: averageConfidence });
+        } else {
+          res({ interimContent: '', finalContent: '', confidence: 0 });
         }
       };
     });
@@ -77,7 +79,7 @@ class SpeechRecognizerService {
     return new Promise((res) => {
       this.recognition.onerror = (event) => {
         const eventError: string = (event as any).error;
-        console.log('error', eventError);
+        // console.log('error', eventError);
         let error: SpeechError;
         switch (eventError) {
           case 'no-speech':

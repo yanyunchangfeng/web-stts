@@ -34,7 +34,6 @@ class WebmToWavConverterService {
   private audioBufferToWav(audioBuffer: AudioBuffer, bitDepth: number): Blob {
     const numOfChannels = audioBuffer.numberOfChannels;
     const sampleRate = audioBuffer.sampleRate;
-    console.log('sampleRate', sampleRate);
 
     // 根据位深度计算缓冲区大小
     const bytesPerSample = bitDepth / 8;
