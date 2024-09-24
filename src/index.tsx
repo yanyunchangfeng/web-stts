@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import React, { useCallback, useMemo } from 'react';
+import React from 'react';
 import App from 'src/App';
 
 const container = document.getElementById('root') as HTMLElement;

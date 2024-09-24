@@ -9,7 +9,6 @@ import {
   webRTCService,
   voiceFusionRequestService
 } from 'src/service';
-import { toggleState } from 'src/utils';
 
 const SpeechButton: FC = () => {
   const [speechRecording, setSpeechRecording] = useState(false);
@@ -100,14 +99,21 @@ const SpeechButton: FC = () => {
       if (!success) return;
       webRTCService.checkVoice(5);
       setRtcRecording(true);
-      webRTCService.onError();
+      webRTCService.onError().then((err: any) => {
+        console.log('error', err);
+        webRTCService.stop();
+        webRTCService.stopVoiceCheck();
+        setRtcRecording(false);
+        // navigator.mediaDevices.getUserMedia({ audio: true }).then((newStream) => {
+        //   newStream.getTracks().forEach((track) => track.stop()); // 立刻停止新的流，确保设备释放
+        // });
+      });
       const wavblob = await webRTCService.onResult();
       if (!wavblob) return;
       webRTCService.downloadAudio(wavblob);
       const formData = new FormData();
       formData.append('file', wavblob, `${Date.now()}.wav`);
       const data: any = await voiceFusionRequestService.stt(formData);
-      console.log(`stt result :${data}`);
       setRtcResultText(data);
     } catch (err) {
       console.error(err);

@@ -6,34 +6,40 @@ class WebRTCService {
   stream!: MediaStream;
   audioContext: AudioContext | null = null;
   analyser: AnalyserNode | null = null;
+  isCheckingAudio = false;
   async init(deviceId?: string) {
-    try {
-      this.stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          deviceId
-        }
-      });
-    } catch (error) {
-      console.log(error);
-    }
+    this.stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        deviceId
+      }
+    });
   }
   async start() {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const deviceId = devices.find((device) => device.kind === 'audioinput' && device.deviceId === 'default')?.deviceId; // 容错率代码 保证获取默认的音频输入设备
-    await this.init(deviceId);
-    if (!this.stream) return false;
-    const audioTracks = this.stream.getAudioTracks();
-    console.log(audioTracks);
-    if (audioTracks[0].enabled === false) {
-      audioTracks[0].enabled = true;
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const deviceId = devices.find(
+        (device) => device.kind === 'audioinput' && device.deviceId === 'default'
+      )?.deviceId; // 容错率代码 保证获取默认的音频输入设备
+      await this.init(deviceId);
+      if (!this.stream) return false;
+      const audioTracks = this.stream.getAudioTracks();
+      if (audioTracks[0]?.enabled === false) {
+        audioTracks[0].enabled = true;
+      }
+      this.mediaRecorder = new MediaRecorder(this.stream);
+      this.mediaRecorder.ondataavailable = (event) => {
+        this.audioChunks.push(event.data);
+      };
+      this.mediaRecorder.start();
+      this.isListening = true;
+      // setTimeout(() => {
+      //   this.stream.removeTrack(audioTracks[0]); //模拟删除音频触发错误
+      // }, 1000 * 3);
+      return true;
+    } catch (error) {
+      console.error('Failed to start media recording:', error);
+      return false;
     }
-    this.mediaRecorder = new MediaRecorder(this.stream);
-    this.mediaRecorder.ondataavailable = (event) => {
-      this.audioChunks.push(event.data);
-    };
-    this.mediaRecorder.start();
-    this.isListening = true;
-    return true;
   }
   stop() {
     this.mediaRecorder?.stop();
@@ -47,20 +53,22 @@ class WebRTCService {
         this.isListening = false;
         const webmBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
         this.audioChunks = [];
-        const wavBlob = await webmToWavConverterService.convertWebmToWav(webmBlob, 24);
-        // const wavBlob2 = await webmToWavConverterService.convertWebmToWav(webmBlob, 24, { sampleRate: 96000 });
+        const wavBlob = await webmToWavConverterService.convertWebmToWav(webmBlob);
         res(wavBlob);
-        // const getWaveBlob = await webmToWavConverterService.getWaveBlob(webmBlob, false);
-        // res(getWaveBlob);
       };
     });
   }
   async onError() {
     return new Promise((res) => {
       this.mediaRecorder.onerror = (event) => {
-        const eventError: string = (event as any).error;
-        console.log('Error: ' + eventError);
-        res(eventError);
+        const error = (event as any).error; // 这里需要使用 any 来获取 error
+        if (error) {
+          console.log('MediaRecorder Error:', error.name, error.message);
+          res(error.message);
+        } else {
+          console.log('Unknown error occurred in MediaRecorder');
+          res('Unknown error');
+        }
       };
     });
   }
@@ -77,8 +85,11 @@ class WebRTCService {
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
     audio.play(); // 播放录制的音频
+    audio.onended = () => {
+      URL.revokeObjectURL(url); // 释放 URL 对象
+    };
   }
-  checkVoice(threshold = 20) {
+  checkVoice(threshold = 20, updateInterval = 200) {
     if (!this.stream) {
       console.warn('No stream available for analysis');
       return;
@@ -88,6 +99,11 @@ class WebRTCService {
       this.audioContext = new AudioContext();
     }
 
+    if (this.isCheckingAudio) {
+      console.warn('Audio checking is already running');
+      return; // 避免重复检测
+    }
+
     const source = this.audioContext.createMediaStreamSource(this.stream);
     this.analyser = this.audioContext.createAnalyser();
     this.analyser.fftSize = 2048;
@@ -95,9 +111,18 @@ class WebRTCService {
     source.connect(this.analyser);
 
     const dataArray = new Uint8Array(this.analyser.fftSize);
+    this.isCheckingAudio = true; // 开始检测
+    let lastUpdateTime = 0; // 控制检测频率
 
-    const checkAudio = () => {
+    const checkAudio = (timestamp: number) => {
       if (!this.analyser) return;
+
+      // 节流，确保 updateInterval 毫秒后才再次检测
+      if (timestamp - lastUpdateTime < updateInterval) {
+        requestAnimationFrame(checkAudio);
+        return;
+      }
+      lastUpdateTime = timestamp;
 
       this.analyser.getByteTimeDomainData(dataArray);
       let sum = 0;
@@ -117,7 +142,7 @@ class WebRTCService {
       requestAnimationFrame(checkAudio);
     };
 
-    checkAudio();
+    requestAnimationFrame(checkAudio); // 启动音频检测
   }
 
   stopVoiceCheck() {
@@ -129,6 +154,7 @@ class WebRTCService {
       this.analyser.disconnect();
       this.analyser = null;
     }
+    this.isCheckingAudio = false;
   }
 }
 

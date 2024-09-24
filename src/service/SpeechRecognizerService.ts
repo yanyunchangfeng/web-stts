@@ -79,7 +79,6 @@ class SpeechRecognizerService {
     return new Promise((res) => {
       this.recognition.onerror = (event) => {
         const eventError: string = (event as any).error;
-        // console.log('error', eventError);
         let error: SpeechError;
         switch (eventError) {
           case 'no-speech':
