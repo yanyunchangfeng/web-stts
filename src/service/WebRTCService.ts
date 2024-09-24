@@ -61,7 +61,7 @@ class WebRTCService {
   async onError() {
     return new Promise((res) => {
       this.mediaRecorder.onerror = (event) => {
-        const error = (event as any).error; // 这里需要使用 any 来获取 error
+        const error = (event as any).error;
         if (error) {
           console.log('MediaRecorder Error:', error.name, error.message);
           res(error.message);

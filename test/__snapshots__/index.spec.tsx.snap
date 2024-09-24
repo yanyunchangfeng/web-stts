@@ -2,14 +2,14 @@
 
 exports[`render App test render App correctly 1`] = `
 <div
-  className="sc-beySPh ixoubA"
+  className="sc-beySPh iTIVrC"
 >
   <div
     className="container"
   >
-    <h1>
+    <h3>
       Web SpeechSynthesize API 语音测试 （底层基于浏览器语音合成引擎，无需科学上网）
-    </h1>
+    </h3>
     <input
       className="ant-input css-dev-only-do-not-override-1vebic0"
       disabled={false}
@@ -28,7 +28,7 @@ exports[`render App test render App correctly 1`] = `
       onClick={[Function]}
       style={
         {
-          "marginTop": "20px",
+          "marginTop": "12px",
         }
       }
       type="button"
@@ -37,9 +37,9 @@ exports[`render App test render App correctly 1`] = `
         Web SpeechSynthesize 播放语音
       </span>
     </button>
-    <h1>
+    <h3>
       TTS API 语音测试 （supcon的TTS）
-    </h1>
+    </h3>
     <button
       className="ant-btn css-dev-only-do-not-override-1vebic0 ant-btn-default"
       disabled={false}
@@ -51,9 +51,9 @@ exports[`render App test render App correctly 1`] = `
         TTS API播放语音
       </span>
     </button>
-    <h1>
+    <h3>
       Combine TTS 语音测试（先执行supcon的TTS 捕获错误后执行浏览器语音合成引擎 提高成功率）
-    </h1>
+    </h3>
     <button
       className="ant-btn css-dev-only-do-not-override-1vebic0 ant-btn-default"
       disabled={false}
@@ -65,9 +65,9 @@ exports[`render App test render App correctly 1`] = `
         Combine TTS 播放语音
       </span>
     </button>
-    <h1>
+    <h3>
       Web SpeechRecognizer API 语音测试（底层依赖于Google的云服务器，需要科学上网）
-    </h1>
+    </h3>
     <button
       className="ant-btn css-dev-only-do-not-override-1vebic0 ant-btn-default"
       disabled={false}
@@ -90,7 +90,7 @@ exports[`render App test render App correctly 1`] = `
       onKeyDown={[Function]}
       style={
         {
-          "marginTop": "20px",
+          "marginTop": "12px",
           "overflowX": "hidden",
           "overflowY": "hidden",
           "resize": undefined,
@@ -103,9 +103,9 @@ exports[`render App test render App correctly 1`] = `
     speechErr:
     "
     />
-    <h1>
+    <h3>
       STT API 语音测试 （supcon的STT）
-    </h1>
+    </h3>
     <button
       className="ant-btn css-dev-only-do-not-override-1vebic0 ant-btn-default"
       disabled={false}
@@ -128,7 +128,7 @@ exports[`render App test render App correctly 1`] = `
       onKeyDown={[Function]}
       style={
         {
-          "marginTop": "20px",
+          "marginTop": "12px",
           "overflowX": "hidden",
           "overflowY": "hidden",
           "resize": undefined,

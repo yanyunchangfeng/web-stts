@@ -104,9 +104,6 @@ const SpeechButton: FC = () => {
         webRTCService.stop();
         webRTCService.stopVoiceCheck();
         setRtcRecording(false);
-        // navigator.mediaDevices.getUserMedia({ audio: true }).then((newStream) => {
-        //   newStream.getTracks().forEach((track) => track.stop()); // 立刻停止新的流，确保设备释放
-        // });
       });
       const wavblob = await webRTCService.onResult();
       if (!wavblob) return;
@@ -138,7 +135,7 @@ const SpeechButton: FC = () => {
       //   setSpeechErr('');
       // });
     } else {
-      console.error('Your Browser is not supported. Please try Google Chrome.');
+      console.log('Your Browser is not supported. Please try Google Chrome.');
     }
   };
   useEffect(() => {
@@ -147,21 +144,21 @@ const SpeechButton: FC = () => {
 
   return (
     <>
-      <h1>Web SpeechSynthesize API 语音测试 （底层基于浏览器语音合成引擎，无需科学上网）</h1>
+      <h3>Web SpeechSynthesize API 语音测试 （底层基于浏览器语音合成引擎，无需科学上网）</h3>
       <Input placeholder="请输入语音内容" defaultValue={speakText} onChange={(e) => setSpeakText(e.target.value)} />
-      <Button onClick={handleSpeechSynthesizer} style={{ marginTop: '20px' }}>
+      <Button onClick={handleSpeechSynthesizer} style={{ marginTop: '12px' }}>
         Web SpeechSynthesize 播放语音
       </Button>
-      <h1>TTS API 语音测试 （supcon的TTS）</h1>
+      <h3>TTS API 语音测试 （supcon的TTS）</h3>
       <Button onClick={handleTTS}>TTS API播放语音</Button>
-      <h1>Combine TTS 语音测试（先执行supcon的TTS 捕获错误后执行浏览器语音合成引擎 提高成功率）</h1>
+      <h3>Combine TTS 语音测试（先执行supcon的TTS 捕获错误后执行浏览器语音合成引擎 提高成功率）</h3>
       <Button onClick={handleCombineTTS}>Combine TTS 播放语音</Button>
-      <h1>Web SpeechRecognizer API 语音测试（底层依赖于Google的云服务器，需要科学上网）</h1>
+      <h3>Web SpeechRecognizer API 语音测试（底层依赖于Google的云服务器，需要科学上网）</h3>
       <Button onClick={handleSpeechRecognizer}>{speechRecordingText}</Button>
-      <Input.TextArea value={speechResultText} style={{ marginTop: '20px' }} autoSize={{ minRows: 2, maxRows: 6 }} />
-      <h1>STT API 语音测试 （supcon的STT）</h1>
+      <Input.TextArea value={speechResultText} style={{ marginTop: '12px' }} autoSize={{ minRows: 2, maxRows: 6 }} />
+      <h3>STT API 语音测试 （supcon的STT）</h3>
       <Button onClick={handleSTT}>{rtcRecordingText}</Button>
-      <Input.TextArea value={rtcResultText} style={{ marginTop: '20px' }} autoSize={{ minRows: 2, maxRows: 6 }} />
+      <Input.TextArea value={rtcResultText} style={{ marginTop: '12px' }} autoSize={{ minRows: 2, maxRows: 6 }} />
     </>
   );
 };

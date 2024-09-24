@@ -1,8 +1,8 @@
-import { SpeakResult } from "src/shared";
+import { SpeakResult } from 'src/shared';
 
 export class SpeechSynthesizerService {
   speechSynthesizer!: SpeechSynthesisUtterance;
-  speechSynthesizerAvailable: boolean = "speechSynthesis" in window;
+  speechSynthesizerAvailable: boolean = 'speechSynthesis' in window;
   voices: SpeechSynthesisVoice[] = [];
   constructor() {
     this.initSynthesis();
@@ -16,23 +16,22 @@ export class SpeechSynthesizerService {
       this.getVoices();
       return;
     }
-    console.error("浏览器不支持 Web Speech API");
+    console.log('浏览器不支持 Web Speech API');
   }
-  speak(message: string, language: string = "zh-CN"): SpeakResult {
+  speak(message: string, language: string = 'zh-CN'): SpeakResult {
     if (this.speechSynthesizerAvailable) {
       this.speechSynthesizer.lang = language;
       this.speechSynthesizer.text = message;
       if (!this.voices.length) {
         this.getVoices();
       }
-      this.speechSynthesizer.voice =
-        this.voices.find((voice) => voice.lang === language) || this.voices[0];
+      this.speechSynthesizer.voice = this.voices.find((voice) => voice.lang === language) || this.voices[0];
       speechSynthesis.speak(this.speechSynthesizer);
       return;
     }
     return {
       code: 503,
-      message: "浏览器不支持 Web Speech API",
+      message: '浏览器不支持 Web Speech API'
     };
   }
   getVoices() {
@@ -40,7 +39,7 @@ export class SpeechSynthesizerService {
       this.voices = window.speechSynthesis.getVoices();
       return this.voices;
     }
-    console.error("浏览器不支持 Web Speech API");
+    console.log('浏览器不支持 Web Speech API');
   }
 }
 export const speechSynthesizerService = new SpeechSynthesizerService();
