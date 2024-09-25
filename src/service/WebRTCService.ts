@@ -7,6 +7,7 @@ class WebRTCService {
   audioContext: AudioContext | null = null;
   analyser: AnalyserNode | null = null;
   isCheckingAudio = false;
+
   async init(deviceId?: string) {
     this.stream = await navigator.mediaDevices.getUserMedia({
       audio: {
@@ -45,7 +46,7 @@ class WebRTCService {
     this.mediaRecorder?.stop();
   }
   async onResult(): Promise<Blob> {
-    return new Promise((res) => {
+    return new Promise((res, rej) => {
       this.mediaRecorder.onstop = async () => {
         this.stream?.getTracks().forEach((track) => {
           track.stop(); // 停止每个轨道
@@ -53,25 +54,35 @@ class WebRTCService {
         this.isListening = false;
         const webmBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
         this.audioChunks = [];
-        const wavBlob = await webmToWavConverterService.convertWebmToWav(webmBlob);
-        res(wavBlob);
-      };
-    });
-  }
-  async onError() {
-    return new Promise((res) => {
-      this.mediaRecorder.onerror = (event) => {
-        const error = (event as any).error;
-        if (error) {
-          console.log('MediaRecorder Error:', error.name, error.message);
-          res(error.message);
-        } else {
-          console.log('Unknown error occurred in MediaRecorder');
-          res('Unknown error');
+        try {
+          const wavBlob = await webmToWavConverterService.convertWebmToWav(webmBlob);
+          res(wavBlob);
+        } catch (error) {
+          console.error('Error converting WebM to WAV:', error);
+          rej(error);
         }
       };
+      this.mediaRecorder.onerror = (event) => {
+        const error = (event as any).error;
+        console.log('MediaRecorder Error:', error?.name, error?.message);
+        rej(error?.message || 'Unknown error');
+      };
     });
   }
+  // async onError() {
+  //   return new Promise((res) => {
+  //     this.mediaRecorder.onerror = (event) => {
+  //       const error = (event as any).error;
+  //       if (error) {
+  //         console.log('MediaRecorder Error:', error.name, error.message);
+  //         res(error.message);
+  //       } else {
+  //         console.log('Unknown error occurred in MediaRecorder');
+  //         res('Unknown error');
+  //       }
+  //     };
+  //   });
+  // }
   downloadAudio(blob: Blob) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -80,11 +91,14 @@ class WebRTCService {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    URL.revokeObjectURL(url); // 释放 URL 对象
   }
   playAudio(blob: Blob) {
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
-    audio.play(); // 播放录制的音频
+    audio.play().catch((err) => {
+      console.error('Playback error:', err);
+    }); // 播放录制的音频
     audio.onended = () => {
       URL.revokeObjectURL(url); // 释放 URL 对象
     };
@@ -125,20 +139,11 @@ class WebRTCService {
       lastUpdateTime = timestamp;
 
       this.analyser.getByteTimeDomainData(dataArray);
-      let sum = 0;
 
-      for (let i = 0; i < dataArray.length; i++) {
-        sum += Math.abs(dataArray[i] - 128); // 128 表示无声
-      }
-
+      const sum = dataArray.reduce((acc, val) => acc + Math.abs(val - 128), 0);
       const average = sum / dataArray.length;
 
-      if (average > threshold) {
-        console.log('有声音输入', average);
-      } else {
-        console.log('无声音', average);
-      }
-
+      console.log(average > threshold ? '有声音输入' : '无声音', average);
       requestAnimationFrame(checkAudio);
     };
 

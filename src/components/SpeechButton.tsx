@@ -97,13 +97,12 @@ const SpeechButton: FC = () => {
       if (!success) return;
       webRTCService.checkVoice(5);
       setRtcRecording(true);
-      webRTCService.onError().then((err: any) => {
+      const wavblob = await webRTCService.onResult().catch((err) => {
         console.log('error', err);
         webRTCService.stop();
         webRTCService.stopVoiceCheck();
         setRtcRecording(false);
       });
-      const wavblob = await webRTCService.onResult();
       if (!wavblob) return;
       webRTCService.downloadAudio(wavblob);
       const formData = new FormData();
