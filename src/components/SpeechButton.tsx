@@ -1,5 +1,5 @@
 import { FC, useEffect, useMemo, useState } from 'react';
-import { Button, Input } from 'antd';
+import { Button, Input, Space, Divider } from 'antd';
 import React from 'react';
 import { TTSVoice, SpeechResult, CombTTSExecStrategy } from 'src/shared';
 import { ttsService, speechRecognizerService, webRTCService, voiceFusionRequestService } from 'src/service';
@@ -24,6 +24,7 @@ const SpeechButton: FC = () => {
     `;
   }, [speechResult, speechErr]);
   const [rtcRecording, setRtcRecording] = useState(false);
+  const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const speechRecordingText = useMemo(() => {
     return speechRecording ? '停止录音' : '开始录音';
   }, [speechRecording]);
@@ -86,37 +87,61 @@ const SpeechButton: FC = () => {
     setSpeechRecording(true);
   };
   const handleSTT = async () => {
-    try {
-      if (webRTCService.isListening) {
-        webRTCService.stop();
-        webRTCService.stopVoiceCheck();
-        setRtcRecording(false);
-        return;
-      }
-      const success = await webRTCService.start();
-      if (!success) return;
-      webRTCService.checkVoice(5);
-      setRtcRecording(true);
-      const wavblob = await webRTCService.onResult().catch((err) => {
-        console.log('error', err);
-        webRTCService.stop();
-        webRTCService.stopVoiceCheck();
-        setRtcRecording(false);
-      });
-      if (!wavblob) return;
-      webRTCService.downloadAudio(wavblob);
+    // try {
+    //   if (webRTCService.isListening) {
+    //     webRTCService.stop();
+    //     webRTCService.stopVoiceCheck();
+    //     setRtcRecording(false);
+    //     return;
+    //   }
+    //   const success = await webRTCService.start();
+    //   if (!success) return;
+    //   webRTCService.checkVoice(5);
+    //   setRtcRecording(true);
+    //   const wavblob = await webRTCService.onResult().catch((err) => {
+    //     console.log('error', err);
+    //     webRTCService.stop();
+    //     webRTCService.stopVoiceCheck();
+    //     setRtcRecording(false);
+    //   });
+    //   if (!wavblob) return;
+    //   webRTCService.downloadAudio(wavblob);
+    //   const formData = new FormData();
+    //   formData.append('file', wavblob, `${Date.now()}.wav`);
+    //   const data: any = await voiceFusionRequestService.stt(formData);
+    //   setRtcResultText(data);
+    // } catch (err) {
+    //   console.error(err);
+    //   webRTCService.stop();
+    //   webRTCService.stopVoiceCheck();
+    //   setRtcRecording(false);
+    // }
+  };
+  const toggleRecording = async () => {
+    if (rtcRecording) {
+      webRTCService.stop();
+      const audioBlob = await webRTCService.onResult();
       const formData = new FormData();
-      formData.append('file', wavblob, `${Date.now()}.wav`);
+      formData.append('file', audioBlob, `${Date.now()}.wav`);
       const data: any = await voiceFusionRequestService.stt(formData);
       setRtcResultText(data);
-    } catch (err) {
-      console.error(err);
-      webRTCService.stop();
-      webRTCService.stopVoiceCheck();
+      setRecordedAudio(audioBlob);
       setRtcRecording(false);
+    } else {
+      setRecordedAudio(null);
+      const success = await webRTCService.start();
+      if (success) {
+        setRtcRecording(true);
+      } else {
+        console.error('Failed to start recording');
+      }
     }
   };
-
+  const handleDownload = () => {
+    if (recordedAudio) {
+      webRTCService.downloadAudio(recordedAudio);
+    }
+  };
   const initWebSpeechRecognizer = () => {
     const webSpeechReady = speechRecognizerService.initialize();
     if (webSpeechReady) {
@@ -154,7 +179,14 @@ const SpeechButton: FC = () => {
       <Button onClick={handleSpeechRecognizer}>{speechRecordingText}</Button>
       <Input.TextArea value={speechResultText} style={{ marginTop: '12px' }} autoSize={{ minRows: 2, maxRows: 6 }} />
       <h3>STT API 语音测试 （supcon的STT）</h3>
-      <Button onClick={handleSTT}>{rtcRecordingText}</Button>
+      <Button onClick={toggleRecording}>{rtcRecordingText}</Button>
+      <Divider />
+      {recordedAudio && (
+        <Space>
+          <Button onClick={handleDownload}>下载录音</Button>
+          <audio controls src={URL.createObjectURL(recordedAudio)} />
+        </Space>
+      )}
       <Input.TextArea value={rtcResultText} style={{ marginTop: '12px' }} autoSize={{ minRows: 2, maxRows: 6 }} />
     </>
   );
