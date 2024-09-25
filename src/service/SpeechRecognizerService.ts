@@ -30,11 +30,13 @@ class SpeechRecognizerService {
     this.recognition.start();
     this.isListening = true;
   }
+
   // onEnd() {
   //   this.recognition.onend = () => {
   //     this.isListening = false;
   //   };
   // }
+
   stop() {
     this.recognition.stop();
   }
@@ -75,7 +77,7 @@ class SpeechRecognizerService {
       };
     });
   }
-  async onError() {
+  async onError(): Promise<SpeechError> {
     return new Promise((res) => {
       this.recognition.onerror = (event) => {
         const eventError: string = (event as any).error;
@@ -93,9 +95,11 @@ class SpeechRecognizerService {
           case 'network':
             error = SpeechError.NetWork;
             break;
+          case 'abort':
+            error = SpeechError.Abort;
+            break;
           default:
-            // error = SpeechError.Unknown;
-            error = eventError as any;
+            error = SpeechError.Unknown;
             break;
         }
         res(error);

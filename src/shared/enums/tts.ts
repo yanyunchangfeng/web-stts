@@ -13,5 +13,6 @@ export enum SpeechError {
   AudioCapture = 'audio-capture',
   NotAllowed = 'not-allowed',
   NetWork = 'network',
+  Abort = 'abort',
   Unknown = 'unknown'
 }
