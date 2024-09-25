@@ -1,15 +1,33 @@
-import { TTSData, AudioType, TTSAtobMode } from "src/shared";
-import { Base64 } from "js-base64";
-import { voiceFusionRequestService } from "src/service";
+import { TTSData, AudioType, TTSAtobMode, CombTTSExecStrategy } from 'src/shared';
+import { Base64 } from 'js-base64';
+import { voiceFusionRequestService, SpeechSynthesizerService } from 'src/service';
 
 class TTSService {
-  async speak(
-    params: TTSData,
-    ttsAtobMode: TTSAtobMode = TTSAtobMode.JSBASE64
-  ) {
+  speechSynthesizerService!: SpeechSynthesizerService;
+  async tts(params: TTSData, ttsAtobMode: TTSAtobMode = TTSAtobMode.JSBASE64) {
     const audioBase64Str = await voiceFusionRequestService.tts(params);
     const audioBlob = this.atobBase64ToBlob(audioBase64Str, ttsAtobMode); // js-base64
     await this.playAudio(audioBlob);
+  }
+  speak(params: TTSData) {
+    if (!this.speechSynthesizerService) {
+      this.speechSynthesizerService = new SpeechSynthesizerService();
+    }
+    return this.speechSynthesizerService.speak(params.text, params.lang);
+  }
+  async combineTTS(params: TTSData, combTtsExecStr: `${CombTTSExecStrategy}` = CombTTSExecStrategy.BROWSER) {
+    if (combTtsExecStr === CombTTSExecStrategy.BROWSER) {
+      const result = this.speak(params);
+      if (result) {
+        await this.tts(params);
+      }
+      return;
+    }
+    try {
+      await this.tts(params);
+    } catch (e) {
+      this.speak(params);
+    }
   }
   jsBase64AtobStr(base64Str: string) {
     return Base64.atob(base64Str);
@@ -19,7 +37,7 @@ class TTSService {
   }
   atobBase64ToBlob(base64Str: string, ttsAtobMode: TTSAtobMode) {
     base64Str = this.base64StrReplace(base64Str);
-    let binaryString = "";
+    let binaryString = '';
     if (ttsAtobMode === TTSAtobMode.JSBASE64) {
       binaryString = this.jsBase64AtobStr(base64Str);
     } else {
@@ -30,7 +48,7 @@ class TTSService {
   }
   base64StrReplace(base64Str: string) {
     // 去掉前缀b'和后缀' 不然会报错
-    return base64Str.replace(/^b'/, "").replace(/'$/, "");
+    return base64Str.replace(/^b'/, '').replace(/'$/, '');
   }
   binaryStrToUint8Array(binaryString: string) {
     const len = binaryString.length;
@@ -40,10 +58,7 @@ class TTSService {
     }
     return bytes;
   }
-  uint8ArrayToBlob(
-    uint8Array: Uint8Array,
-    mimeType: AudioType = AudioType.WAV
-  ) {
+  uint8ArrayToBlob(uint8Array: Uint8Array, mimeType: AudioType = AudioType.WAV) {
     return new Blob([uint8Array], { type: mimeType });
   }
   async playAudio(audioBlob: Blob) {
@@ -51,14 +66,14 @@ class TTSService {
     const audio = new Audio(audioUrl);
     try {
       await audio.play();
-      console.log("音频播放成功");
+      console.log('音频播放成功');
     } catch (error) {
-      console.error("音频播放失败:", error);
+      console.error('音频播放失败:', error);
     }
     // 释放URL对象
-    audio.addEventListener("ended", () => {
+    audio.addEventListener('ended', () => {
       URL.revokeObjectURL(audioUrl);
-      console.log("音频播放结束，已释放资源");
+      console.log('音频播放结束，已释放资源');
     });
   }
 }

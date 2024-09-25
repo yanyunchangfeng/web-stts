@@ -1,1 +1,1 @@
-export * from "./tts";
+export * from './stts';

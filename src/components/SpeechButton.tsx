@@ -1,14 +1,8 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 import { Button, Input } from 'antd';
 import React from 'react';
-import { TTSVoice, SpeechResult } from 'src/shared';
-import {
-  ttsService,
-  speechSynthesizerService,
-  speechRecognizerService,
-  webRTCService,
-  voiceFusionRequestService
-} from 'src/service';
+import { TTSVoice, SpeechResult, CombTTSExecStrategy } from 'src/shared';
+import { ttsService, speechRecognizerService, webRTCService, voiceFusionRequestService } from 'src/service';
 
 const SpeechButton: FC = () => {
   const [speechRecording, setSpeechRecording] = useState(false);
@@ -37,27 +31,31 @@ const SpeechButton: FC = () => {
     return rtcRecording ? '停止录音' : '开始录音';
   }, [rtcRecording]);
 
-  const handleSpeechSynthesizer = async () => {
-    return speechSynthesizerService.speak(speakText);
-  };
-
-  const handleTTS = async () => {
-    await ttsService.speak({
+  const handleSpeechSynthesizer = () => {
+    ttsService.speak({
       text: speakText,
       // voc: TTSVoice.man,
       voc: TTSVoice.woman
     });
   };
-  const handleCombineTTS = async () => {
-    try {
-      await handleTTS();
-    } catch (e) {
-      console.error('handleTTS error', e);
-      const data = await handleSpeechSynthesizer();
-      if (data) {
-        console.error(data.message);
+
+  const handleTTS = () => {
+    ttsService.tts({
+      text: speakText,
+      // voc: TTSVoice.man,
+      voc: TTSVoice.woman
+    });
+  };
+  const handleCombineTTS = () => {
+    ttsService.combineTTS(
+      {
+        text: speakText,
+        // voc: TTSVoice.man,
+        voc: TTSVoice.woman,
+        lang: 'zh-CN'
       }
-    }
+      // CombTTSExecStrategy.TTS
+    );
   };
 
   const handleSpeechRecognizer = () => {

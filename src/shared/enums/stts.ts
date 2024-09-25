@@ -4,8 +4,8 @@ export enum TTSVoice {
 }
 
 export enum TTSAtobMode {
-  'WINDOW' = 'window.atob',
-  'JSBASE64' = 'jsbase64.atob'
+  WINDOW = 'window.atob',
+  JSBASE64 = 'jsbase64.atob'
 }
 
 export enum SpeechError {
@@ -15,4 +15,9 @@ export enum SpeechError {
   NetWork = 'network',
   Abort = 'abort',
   Unknown = 'unknown'
+}
+
+export enum CombTTSExecStrategy {
+  BROWSER = 'BROWSER',
+  TTS = 'TTS'
 }

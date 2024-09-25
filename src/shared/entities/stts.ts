@@ -1,7 +1,8 @@
-import { TTSVoice } from "src/shared";
+import { TTSVoice } from 'src/shared';
 export interface TTSData {
   text: string;
   voc: `${TTSVoice}`;
+  lang?: string;
 }
 export interface SpeechResult {
   interimContent: string;

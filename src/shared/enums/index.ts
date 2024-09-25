@@ -1,2 +1,2 @@
-export * from "./tts";
-export * from "./audio";
+export * from './stts';
+export * from './audio';
