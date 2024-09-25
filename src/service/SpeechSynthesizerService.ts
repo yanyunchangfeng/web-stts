@@ -16,7 +16,10 @@ export class SpeechSynthesizerService {
       this.getVoices();
       return;
     }
-    console.log('浏览器不支持 Web Speech API');
+    return {
+      code: 503,
+      message: '浏览器不支持 Web Speech API'
+    };
   }
   speak(message: string, language: string = 'zh-CN'): SpeakResult {
     if (this.speechSynthesizerAvailable) {
@@ -39,7 +42,10 @@ export class SpeechSynthesizerService {
       this.voices = window.speechSynthesis.getVoices();
       return this.voices;
     }
-    console.log('浏览器不支持 Web Speech API');
+    return {
+      code: 503,
+      message: '浏览器不支持 Web Speech API'
+    };
   }
 }
 export const speechSynthesizerService = new SpeechSynthesizerService();
