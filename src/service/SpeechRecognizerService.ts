@@ -82,7 +82,6 @@ class SpeechRecognizerService {
       this.recognition.onerror = (event) => {
         const eventError: string = (event as any).error;
         let error: SpeechError;
-        alert(eventError);
         switch (eventError) {
           case 'no-speech':
             error = SpeechError.NoSpeech;
@@ -96,8 +95,8 @@ class SpeechRecognizerService {
           case 'network':
             error = SpeechError.NetWork;
             break;
-          case 'abort':
-            error = SpeechError.Abort;
+          case 'aborted':
+            error = SpeechError.Aborted;
             break;
           default:
             error = SpeechError.Unknown;
