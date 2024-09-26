@@ -180,14 +180,15 @@ const SpeechButton: FC = () => {
       <Input.TextArea value={speechResultText} style={{ marginTop: '12px' }} autoSize={{ minRows: 2, maxRows: 6 }} />
       <h3>STT API 语音测试 （supcon的STT）</h3>
       <Button onClick={toggleRecording}>{rtcRecordingText}</Button>
-      <Divider />
+      <Input.TextArea value={rtcResultText} style={{ marginTop: '12px' }} autoSize={{ minRows: 2, maxRows: 6 }} />
+
       {recordedAudio && (
-        <Space>
+        <Space style={{ marginTop: '12px' }}>
+          <span>录音资源</span>
           <Button onClick={handleDownload}>下载录音</Button>
           <audio controls src={URL.createObjectURL(recordedAudio)} />
         </Space>
       )}
-      <Input.TextArea value={rtcResultText} style={{ marginTop: '12px' }} autoSize={{ minRows: 2, maxRows: 6 }} />
     </>
   );
 };

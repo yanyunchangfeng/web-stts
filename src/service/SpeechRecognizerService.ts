@@ -82,7 +82,7 @@ class SpeechRecognizerService {
       this.recognition.onerror = (event) => {
         const eventError: string = (event as any).error;
         let error: SpeechError;
-        alert('error');
+        alert(eventError);
         switch (eventError) {
           case 'no-speech':
             error = SpeechError.NoSpeech;
