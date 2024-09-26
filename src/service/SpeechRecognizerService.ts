@@ -61,6 +61,7 @@ class SpeechRecognizerService {
           } else {
             interimContent += transcript;
             confidenceSum += confidence;
+            finalCount++;
             console.log(interimContent, 'interimContent');
           }
         }
@@ -75,10 +76,6 @@ class SpeechRecognizerService {
           res({ interimContent: '', finalContent: '', confidence: 0 });
         }
       };
-    });
-  }
-  async onError(): Promise<SpeechError> {
-    return new Promise((res) => {
       this.recognition.onerror = (event) => {
         const eventError: string = (event as any).error;
         let error: SpeechError;
@@ -102,10 +99,39 @@ class SpeechRecognizerService {
             error = SpeechError.Unknown;
             break;
         }
-        res(error);
+        rej(error);
       };
     });
   }
+  // async onError(): Promise<SpeechError> {
+  //   return new Promise((res) => {
+  //     this.recognition.onerror = (event) => {
+  //       const eventError: string = (event as any).error;
+  //       let error: SpeechError;
+  //       switch (eventError) {
+  //         case 'no-speech':
+  //           error = SpeechError.NoSpeech;
+  //           break;
+  //         case 'audio-capture':
+  //           error = SpeechError.AudioCapture;
+  //           break;
+  //         case 'not-allowed':
+  //           error = SpeechError.NotAllowed;
+  //           break;
+  //         case 'network':
+  //           error = SpeechError.NetWork;
+  //           break;
+  //         case 'aborted':
+  //           error = SpeechError.Aborted;
+  //           break;
+  //         default:
+  //           error = SpeechError.Unknown;
+  //           break;
+  //       }
+  //       res(error);
+  //     };
+  //   });
+  // }
 }
 
 export const speechRecognizerService = new SpeechRecognizerService();

@@ -1,5 +1,5 @@
 import { FC, useEffect, useMemo, useState } from 'react';
-import { Button, Input, Space, Divider } from 'antd';
+import { Button, Input, Space } from 'antd';
 import React from 'react';
 import { TTSVoice, SpeechResult, CombTTSExecStrategy } from 'src/shared';
 import { ttsService, speechRecognizerService, webRTCService, voiceFusionRequestService } from 'src/service';
@@ -54,37 +54,36 @@ const SpeechButton: FC = () => {
         // voc: TTSVoice.man,
         voc: TTSVoice.woman,
         lang: 'zh-CN'
-      }
+      },
+      CombTTSExecStrategy.BROWSER
       // CombTTSExecStrategy.TTS
     );
   };
 
-  const handleSpeechRecognizer = () => {
+  const handleSpeechRecognizer = async () => {
     if (!speechRecognizerService.recognition) return;
     if (speechRecognizerService.isListening) {
       speechRecognizerService.stop();
       setSpeechRecording(false);
       return;
     }
-    speechRecognizerService.start();
-    setSpeechResult({
-      interimContent: '',
-      finalContent: '',
-      confidence: 0
-    });
-    setSpeechErr('');
-    speechRecognizerService.onError().then((err: any) => {
-      console.error(err);
+    try {
+      setSpeechResult({
+        interimContent: '',
+        finalContent: '',
+        confidence: 0
+      });
+      setSpeechErr('');
+      speechRecognizerService.start();
+      setSpeechRecording(true);
+      const data = await speechRecognizerService.onResult();
+      setSpeechResult(data);
+    } catch (err: any) {
       setSpeechErr(err);
+    } finally {
       speechRecognizerService.stop();
       setSpeechRecording(false);
-    });
-    speechRecognizerService.onResult().then((data) => {
-      console.log(data);
-      setSpeechResult(data);
-    });
-
-    setSpeechRecording(true);
+    }
   };
   const handleSTT = async () => {
     try {
@@ -129,17 +128,6 @@ const SpeechButton: FC = () => {
   const initWebSpeechRecognizer = () => {
     const webSpeechReady = speechRecognizerService.initialize();
     if (webSpeechReady) {
-      // speechRecognizerService.onError().then((err: any) => {
-      //   console.error(err);
-      //   setSpeechErr(err);
-      //   speechRecognizerService.stop();
-      //   setSpeechRecording(false);
-      // });
-      // speechRecognizerService.onResult().then((data) => {
-      //   console.log(data);
-      //   setSpeechResult(data);
-      //   setSpeechErr('');
-      // });
     } else {
       console.log('Your Browser is not supported. Please try Google Chrome.');
     }
