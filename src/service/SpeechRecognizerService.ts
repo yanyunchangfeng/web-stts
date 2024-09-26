@@ -60,8 +60,6 @@ class SpeechRecognizerService {
             console.log(finalContent, 'finalContent');
           } else {
             interimContent += transcript;
-            confidenceSum += confidence;
-            finalCount++;
             console.log(interimContent, 'interimContent');
           }
         }
