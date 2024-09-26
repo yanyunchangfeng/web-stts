@@ -27,7 +27,7 @@ class WebRTCService {
       await this.init(deviceId);
       if (!this.stream) return false;
       this.setupMediaRecorder();
-      this.enAbledAudioChunks();
+      this.enAbledAudioTracks();
       this.mediaRecorder.start();
       this.isListening = true;
       return true;
@@ -38,15 +38,18 @@ class WebRTCService {
   }
   getAudioTracks() {
     if (!this.audioTracks.length) {
-      this.audioTracks = this.stream.getAudioTracks();
+      this.audioTracks = this.stream?.getAudioTracks();
     }
+    return this.audioTracks;
   }
   delAudioTracks() {
-    this.stream.removeTrack(this.audioTracks[0]); //模拟删除音频触发错误
+    if (this.audioTracks.length) {
+      this.stream?.removeTrack(this.audioTracks[0]); //模拟删除音频触发错误
+    }
   }
-  private enAbledAudioChunks() {
+  private enAbledAudioTracks() {
     this.getAudioTracks();
-    if (this.audioTracks[0]?.enabled === false) {
+    if (this.audioTracks.length) {
       this.audioTracks[0].enabled = true;
     }
   }
@@ -63,16 +66,23 @@ class WebRTCService {
   stop() {
     this.mediaRecorder?.stop();
   }
-  private resetState() {
+  private resetRecordingState() {
     this.isListening = false;
+  }
+  private resetAudioData() {
+    this.audioChunks = [];
+    this.audioTracks = [];
+  }
+  private resetAudioInit() {
+    this.resetRecordingState();
+    this.resetAudioData();
   }
   async onResult(): Promise<Blob> {
     return new Promise((resolve, reject) => {
       this.mediaRecorder.onstop = async () => {
-        this.resetState();
         this.stopMediaStream();
         const webmBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-        this.audioChunks = [];
+        this.resetAudioInit();
         try {
           const wavBlob = await webmToWavConverterService.convertWebmToWav(webmBlob);
           resolve(wavBlob);
@@ -83,7 +93,7 @@ class WebRTCService {
       };
 
       this.mediaRecorder.onerror = (event) => {
-        this.resetState();
+        this.resetAudioInit();
         const error = (event as any).error;
         this.handleError('MediaRecorder error', error);
         reject(error?.message || 'Unknown error');

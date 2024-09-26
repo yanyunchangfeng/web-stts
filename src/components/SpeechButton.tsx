@@ -165,7 +165,6 @@ const SpeechButton: FC = () => {
       <h3>STT API 语音测试 （supcon的STT）</h3>
       <Button onClick={handleSTT}>{rtcRecordingText}</Button>
       <Input.TextArea value={rtcResultText} style={{ marginTop: '12px' }} autoSize={{ minRows: 2, maxRows: 6 }} />
-
       {recordedAudio && (
         <Space style={{ marginTop: '12px' }}>
           <Button onClick={handleDownload}>下载录音</Button>

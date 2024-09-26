@@ -44,7 +44,7 @@ class SpeechRecognizerService {
     return new Promise((res, rej) => {
       let interimContent = ''; // 临时识别结果
       let finalContent = ''; // 最终识别结果
-      let confidenceSum = 0; // 累加信心值
+      let confidenceSum = 0; // 累加准确度
       let finalCount = 0; // 最终结果计数
       let hasFinalResult = false; // 检查是否有最终结果
 
