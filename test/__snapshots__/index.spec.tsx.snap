@@ -117,6 +117,10 @@ exports[`render App test render App correctly 1`] = `
         开始录音
       </span>
     </button>
+    <div
+      className="ant-divider css-dev-only-do-not-override-1vebic0 ant-divider-horizontal"
+      role="separator"
+    />
     <textarea
       className="ant-input css-dev-only-do-not-override-1vebic0"
       disabled={false}

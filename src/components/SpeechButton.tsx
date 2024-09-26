@@ -121,12 +121,12 @@ const SpeechButton: FC = () => {
     if (rtcRecording) {
       webRTCService.stop();
       const audioBlob = await webRTCService.onResult();
+      setRecordedAudio(audioBlob);
+      setRtcRecording(false);
       const formData = new FormData();
       formData.append('file', audioBlob, `${Date.now()}.wav`);
       const data: any = await voiceFusionRequestService.stt(formData);
       setRtcResultText(data);
-      setRecordedAudio(audioBlob);
-      setRtcRecording(false);
     } else {
       setRecordedAudio(null);
       const success = await webRTCService.start();
