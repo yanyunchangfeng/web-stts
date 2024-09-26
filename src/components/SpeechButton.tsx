@@ -87,56 +87,40 @@ const SpeechButton: FC = () => {
     setSpeechRecording(true);
   };
   const handleSTT = async () => {
-    // try {
-    //   if (webRTCService.isListening) {
-    //     webRTCService.stop();
-    //     webRTCService.stopVoiceCheck();
-    //     setRtcRecording(false);
-    //     return;
-    //   }
-    //   const success = await webRTCService.start();
-    //   if (!success) return;
-    //   webRTCService.checkVoice(5);
-    //   setRtcRecording(true);
-    //   const wavblob = await webRTCService.onResult().catch((err) => {
-    //     console.log('error', err);
-    //     webRTCService.stop();
-    //     webRTCService.stopVoiceCheck();
-    //     setRtcRecording(false);
-    //   });
-    //   if (!wavblob) return;
-    //   webRTCService.downloadAudio(wavblob);
-    //   const formData = new FormData();
-    //   formData.append('file', wavblob, `${Date.now()}.wav`);
-    //   const data: any = await voiceFusionRequestService.stt(formData);
-    //   setRtcResultText(data);
-    // } catch (err) {
-    //   console.error(err);
-    //   webRTCService.stop();
-    //   webRTCService.stopVoiceCheck();
-    //   setRtcRecording(false);
-    // }
-  };
-  const toggleRecording = async () => {
-    if (rtcRecording) {
-      webRTCService.stop();
-      const audioBlob = await webRTCService.onResult();
-      setRecordedAudio(audioBlob);
-      setRtcRecording(false);
+    try {
+      if (webRTCService.isListening) {
+        webRTCService.stop();
+        webRTCService.stopVoiceCheck();
+        setRtcRecording(false);
+        return;
+      }
+      const success = await webRTCService.start();
+      if (!success) return;
+      setRtcRecording(true);
+      setRecordedAudio(null);
+      setTimeout(() => {
+        // webRTCService.delAudioTracks();
+      }, 1000 * 3);
+      webRTCService.checkVoice(5);
+      const wavblob = await webRTCService.onResult().catch((err) => {
+        webRTCService.stop();
+        webRTCService.stopVoiceCheck();
+        setRtcRecording(false);
+      });
+      if (!wavblob) return;
+      setRecordedAudio(wavblob);
       const formData = new FormData();
-      formData.append('file', audioBlob, `${Date.now()}.wav`);
+      formData.append('file', wavblob, `${Date.now()}.wav`);
       const data: any = await voiceFusionRequestService.stt(formData);
       setRtcResultText(data);
-    } else {
-      setRecordedAudio(null);
-      const success = await webRTCService.start();
-      if (success) {
-        setRtcRecording(true);
-      } else {
-        console.error('Failed to start recording');
-      }
+    } catch (err) {
+      console.error(err);
+      webRTCService.stop();
+      webRTCService.stopVoiceCheck();
+      setRtcRecording(false);
     }
   };
+
   const handleDownload = () => {
     if (recordedAudio) {
       webRTCService.downloadAudio(recordedAudio);
@@ -179,12 +163,11 @@ const SpeechButton: FC = () => {
       <Button onClick={handleSpeechRecognizer}>{speechRecordingText}</Button>
       <Input.TextArea value={speechResultText} style={{ marginTop: '12px' }} autoSize={{ minRows: 2, maxRows: 6 }} />
       <h3>STT API 语音测试 （supcon的STT）</h3>
-      <Button onClick={toggleRecording}>{rtcRecordingText}</Button>
+      <Button onClick={handleSTT}>{rtcRecordingText}</Button>
       <Input.TextArea value={rtcResultText} style={{ marginTop: '12px' }} autoSize={{ minRows: 2, maxRows: 6 }} />
 
       {recordedAudio && (
         <Space style={{ marginTop: '12px' }}>
-          <span>录音资源</span>
           <Button onClick={handleDownload}>下载录音</Button>
           <audio controls src={URL.createObjectURL(recordedAudio)} />
         </Space>
