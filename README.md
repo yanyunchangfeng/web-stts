@@ -15,6 +15,14 @@
 你好，我是[燕云长风](https://yanyunchangfeng.github.io)。  
 寓意：结合李白著名的边塞诗《关山月》取【燕云长风】—— 长风几万里，吹度玉门关。
 
+## TTS
+
+![tts](src/assets/img/TTS.svg)
+
+## STT
+
+![tts](src/assets/img/STT.svg)
+
 ## 用法
 
 ```
