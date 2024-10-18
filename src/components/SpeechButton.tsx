@@ -108,8 +108,9 @@ const SpeechButton: FC = () => {
       const data: any = await voiceFusionRequestService.stt(formData);
       setRtcResultText(data);
     } catch (err) {
-      console.error(err);
       webRTCService.stop();
+      console.error(err);
+      setRtcResultText(`speechErr: ${err}`);
     } finally {
       setRtcRecording(false);
     }
