@@ -1,5 +1,5 @@
 import { webmToWavConverterService } from 'src/service';
-
+import { SpeechError } from 'src/shared';
 class WebRTCService {
   private mediaRecorder!: MediaRecorder;
   private audioChunks: Blob[] = [];
@@ -9,6 +9,7 @@ class WebRTCService {
   private analyser: AnalyserNode | null = null;
   isCheckingAudio = false;
   private audioTracks: MediaStreamTrack[] = [];
+  isNoSpeech = false;
 
   async init(deviceId?: string) {
     try {
@@ -30,6 +31,8 @@ class WebRTCService {
       this.enAbledAudioTracks();
       this.mediaRecorder.start();
       this.isListening = true;
+      this.isNoSpeech = false;
+      this.checkVoice(5);
       return true;
     } catch (error) {
       this.handleError('Failed to start media recording', error);
@@ -80,15 +83,18 @@ class WebRTCService {
   async onResult(): Promise<Blob> {
     return new Promise((resolve, reject) => {
       this.mediaRecorder.onstop = async () => {
-        this.stopMediaStream();
-        const webmBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-        this.resetAudioInit();
         try {
+          this.stopVoiceCheck();
+          this.stopMediaStream();
+          if (this.isNoSpeech) return reject(SpeechError.NoSpeech);
+          const webmBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
           const wavBlob = await webmToWavConverterService.convertWebmToWav(webmBlob);
           resolve(wavBlob);
         } catch (error) {
           this.handleError('Error converting WebM to WAV', error);
           reject(error);
+        } finally {
+          this.resetAudioInit();
         }
       };
 
@@ -135,7 +141,7 @@ class WebRTCService {
     audio.onended = () => URL.revokeObjectURL(url);
   }
 
-  checkVoice(threshold = 20, updateInterval = 200) {
+  checkVoice(threshold = 20, updateInterval = 200, maxSilenceDuration = 6000) {
     if (!this.stream) {
       console.warn('No stream available for analysis');
       return;
@@ -155,13 +161,13 @@ class WebRTCService {
     this.analyser.fftSize = 2048;
     source.connect(this.analyser);
     this.isCheckingAudio = true; // 开始检测
-    this.startAudioCheck(threshold, updateInterval);
+    this.startAudioCheck(threshold, updateInterval, maxSilenceDuration);
   }
 
-  private startAudioCheck(threshold: number, updateInterval: number) {
+  private startAudioCheck(threshold: number, updateInterval: number, maxSilenceDuration: number) {
     const dataArray = new Uint8Array(this.analyser!.fftSize);
     let lastUpdateTime = 0;
-
+    let silenceDuration = 0;
     const checkAudio = (timestamp: number) => {
       if (!this.analyser) return;
 
@@ -174,6 +180,19 @@ class WebRTCService {
       this.analyser.getByteTimeDomainData(dataArray);
       const average = this.calculateAudioAverage(dataArray);
       console.log(average > threshold ? '有声音输入' : '无声音', average);
+      if (average > threshold) {
+        silenceDuration = 0;
+      } else {
+        silenceDuration += updateInterval;
+      }
+      if (silenceDuration >= maxSilenceDuration) {
+        console.log('超过6秒无声音，停止检测');
+        this.isNoSpeech = true;
+        this.stopVoiceCheck(); // 停止检测
+        this.stop();
+        return;
+      }
+
       requestAnimationFrame(checkAudio);
     };
 

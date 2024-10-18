@@ -52,7 +52,7 @@ exports[`render App test render App correctly 1`] = `
       </span>
     </button>
     <h3>
-      Combine TTS 语音测试（先执行supcon的TTS 捕获错误后执行浏览器语音合成引擎 提高成功率）
+      Combine TTS 语音测试（有服务端audioBase64缓存先执行缓存播放,没有的话执行supcon的TTS 捕获错误后执行浏览器语音合成引擎 提高成功率）
     </h3>
     <button
       className="ant-btn css-dev-only-do-not-override-1vebic0 ant-btn-default"

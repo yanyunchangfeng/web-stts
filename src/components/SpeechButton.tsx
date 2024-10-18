@@ -90,7 +90,6 @@ const SpeechButton: FC = () => {
     try {
       if (webRTCService.isListening) {
         webRTCService.stop();
-        webRTCService.stopVoiceCheck();
         setRtcRecording(false);
         return;
       }
@@ -101,12 +100,7 @@ const SpeechButton: FC = () => {
       setTimeout(() => {
         // webRTCService.delAudioTracks();
       }, 1000 * 3);
-      webRTCService.checkVoice(5);
-      const wavblob = await webRTCService.onResult().catch((err) => {
-        webRTCService.stop();
-        webRTCService.stopVoiceCheck();
-        setRtcRecording(false);
-      });
+      const wavblob = await webRTCService.onResult();
       if (!wavblob) return;
       setRecordedAudio(wavblob);
       const formData = new FormData();
@@ -116,7 +110,7 @@ const SpeechButton: FC = () => {
     } catch (err) {
       console.error(err);
       webRTCService.stop();
-      webRTCService.stopVoiceCheck();
+    } finally {
       setRtcRecording(false);
     }
   };
