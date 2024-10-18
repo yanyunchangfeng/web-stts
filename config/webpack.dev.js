@@ -19,6 +19,10 @@ module.exports = merge(commonConfig, {
       '/dev': {
         target: 'http://10.16.11.39:8086',
         changeOrigin: true
+      },
+      '/msService': {
+        target: 'http://10.54.56.61:8080',
+        changeOrigin: true
       }
     }
   }
