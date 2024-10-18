@@ -87,6 +87,7 @@ const SpeechButton: FC = () => {
   };
   const handleSTT = async () => {
     try {
+      setRtcResultText('');
       if (webRTCService.isListening) {
         webRTCService.stop();
         setRtcRecording(false);
@@ -147,10 +148,10 @@ const SpeechButton: FC = () => {
       <Button onClick={handleCombineTTS}>Combine TTS 播放语音</Button>
       <h3>Web SpeechRecognizer API 语音测试（底层依赖于Google的云服务器，需要科学上网）</h3>
       <Button onClick={handleSpeechRecognizer}>{speechRecordingText}</Button>
-      <Input.TextArea value={speechResultText} style={{ marginTop: '12px' }} autoSize={{ minRows: 2, maxRows: 6 }} />
+      <Input.TextArea value={speechResultText} style={{ marginTop: 12 }} autoSize={{ minRows: 2, maxRows: 6 }} />
       <h3>STT API 语音测试 （xunfeiSTT）</h3>
       <Button onClick={handleSTT}>{rtcRecordingText}</Button>
-      <Input.TextArea value={rtcResultText} style={{ marginTop: '12px' }} autoSize={{ minRows: 2, maxRows: 6 }} />
+      <Input.TextArea value={rtcResultText} style={{ marginTop: 12 }} autoSize={{ minRows: 2, maxRows: 6 }} />
       {recordedAudio && (
         <Space style={{ marginTop: '12px' }}>
           <Button onClick={handleDownload}>下载录音</Button>
