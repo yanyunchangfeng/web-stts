@@ -38,7 +38,7 @@ exports[`render App test render App correctly 1`] = `
       </span>
     </button>
     <h3>
-      TTS API 语音测试 （supcon的TTS）
+      TTS API 语音测试 （xunfeiTTS）
     </h3>
     <button
       className="ant-btn css-dev-only-do-not-override-1vebic0 ant-btn-default"
@@ -104,7 +104,7 @@ exports[`render App test render App correctly 1`] = `
     "
     />
     <h3>
-      STT API 语音测试 （supcon的STT）
+      STT API 语音测试 （xunfeiSTT）
     </h3>
     <button
       className="ant-btn css-dev-only-do-not-override-1vebic0 ant-btn-default"

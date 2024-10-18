@@ -141,7 +141,7 @@ const SpeechButton: FC = () => {
       <h3>TTS API 语音测试 （xunfeiTTS）</h3>
       <Button onClick={handleTTS}>TTS API播放语音</Button>
       <h3>
-        Combine TTS 语音测试（有服务端audioBase64缓存先执行缓存播放,没有的话执行supcon的TTS
+        Combine TTS 语音测试（有服务端audioBase64缓存先执行缓存播放,没有的话执行xunfeiTTS
         捕获错误后执行浏览器语音合成引擎 提高成功率）
       </h3>
       <Button onClick={handleCombineTTS}>Combine TTS 播放语音</Button>
