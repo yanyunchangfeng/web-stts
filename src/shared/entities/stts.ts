@@ -3,6 +3,7 @@ export interface TTSData {
   text: string;
   voc: `${TTSVoice}`;
   lang?: string;
+  audioBase64?: string;
 }
 export interface SpeechResult {
   interimContent: string;

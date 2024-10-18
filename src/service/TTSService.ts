@@ -16,18 +16,23 @@ class TTSService {
     return this.speechSynthesizerService.speak(params.text, params.lang);
   }
   async combineTTS(params: TTSData, combTtsExecStr: `${CombTTSExecStrategy}` = CombTTSExecStrategy.BROWSER) {
+    const cacheAudioBase64Str = params.audioBase64;
     if (combTtsExecStr === CombTTSExecStrategy.BROWSER) {
       const result = this.speak(params);
-      if (result) {
-        await this.tts(params);
-      }
-      return;
+      if (!result) return;
+      if (cacheAudioBase64Str) return this.cacheBase64ToAudio(cacheAudioBase64Str);
+      return await this.tts(params);
     }
     try {
+      if (cacheAudioBase64Str) return this.cacheBase64ToAudio(cacheAudioBase64Str);
       await this.tts(params);
     } catch (e) {
       this.speak(params);
     }
+  }
+  async cacheBase64ToAudio(base64Str: string) {
+    const audioBlob = this.atobBase64ToBlob(base64Str, TTSAtobMode.WINDOW);
+    await this.playAudio(audioBlob);
   }
   jsBase64AtobStr(base64Str: string) {
     return Base64.atob(base64Str);
