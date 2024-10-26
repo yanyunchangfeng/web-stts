@@ -52,11 +52,9 @@ const SpeechButton: FC = () => {
       {
         text: speakText,
         // voc: TTSVoice.man,
-        voc: TTSVoice.woman,
-        lang: 'zh-CN'
+        voc: TTSVoice.woman
       },
       CombTTSExecStrategy.TTS
-      // CombTTSExecStrategy.TTS
     );
   };
 

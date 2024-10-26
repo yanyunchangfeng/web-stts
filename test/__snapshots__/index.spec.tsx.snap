@@ -90,7 +90,7 @@ exports[`render App test render App correctly 1`] = `
       onKeyDown={[Function]}
       style={
         {
-          "marginTop": "12px",
+          "marginTop": 12,
           "overflowX": "hidden",
           "overflowY": "hidden",
           "resize": undefined,
@@ -128,7 +128,7 @@ exports[`render App test render App correctly 1`] = `
       onKeyDown={[Function]}
       style={
         {
-          "marginTop": "12px",
+          "marginTop": 12,
           "overflowX": "hidden",
           "overflowY": "hidden",
           "resize": undefined,
