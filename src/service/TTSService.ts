@@ -17,17 +17,20 @@ class TTSService {
   }
   async combineTTS(params: TTSData, combTtsExecStr: `${CombTTSExecStrategy}` = CombTTSExecStrategy.BROWSER) {
     const cacheAudioBase64Str = params.audioBase64;
+    let result;
     if (combTtsExecStr === CombTTSExecStrategy.BROWSER) {
-      const result = this.speak(params);
+      result = this.speak(params);
       if (!result) return;
       if (cacheAudioBase64Str) return this.cacheBase64ToAudio(cacheAudioBase64Str);
       return await this.tts(params);
     }
     try {
       if (cacheAudioBase64Str) return this.cacheBase64ToAudio(cacheAudioBase64Str);
+      result = this.speak(params); // 在这里执行在ios chrome上可以播放
+      if (!result) return;
       await this.tts(params);
     } catch (e) {
-      this.speak(params);
+      // this.speak(params); // 在这里执行在ios chrome上无法播放
     }
   }
   async cacheBase64ToAudio(base64Str: string) {
