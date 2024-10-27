@@ -1,5 +1,8 @@
 name: Deploy
 
+env:
+  TEST_SCRIPT: ${{vars.TEST_SCRIPT ||  'test'}}
+
 on:
   workflow_dispatch:
   push:
@@ -31,7 +34,7 @@ jobs:
         uses: bahmutov/npm-install@v1
 
       - name: Test project
-        run: npm run pre-commit
+        run: npm run ${{env.TEST_SCRIPT}}
 
       - name: Build project
         run: npm run build
