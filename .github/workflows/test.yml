@@ -1,5 +1,8 @@
 name: Test Coverage
 
+env:
+  TEST_SCRIPT: ${{vars.TEST_SCRIPT ||  'test'}}
+
 on:
   workflow_dispatch:
   push:
@@ -16,7 +19,7 @@ jobs:
         with:
           node-version: '21.x'
       - run: yarn install
-      - run: yarn test
+      - run: yarn ${{env.TEST_SCRIPT}}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
