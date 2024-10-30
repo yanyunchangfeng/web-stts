@@ -1,7 +1,7 @@
 import { TTSVoice } from 'src/shared';
 export interface TTSData {
   text: string;
-  voc: `${TTSVoice}`;
+  voc?: `${TTSVoice}`;
   lang?: string;
   audioBase64?: string;
 }

@@ -1,4 +1,5 @@
 import { SpeakResult } from 'src/shared';
+import { sleep } from 'src/utils';
 
 export class SpeechSynthesizerService {
   speechSynthesizer!: SpeechSynthesisUtterance;
@@ -21,16 +22,26 @@ export class SpeechSynthesizerService {
       message: '浏览器不支持 Web Speech API'
     };
   }
-  speak(message: string, language: string = 'zh-CN'): SpeakResult {
+  async speak(message: string, language: string = 'zh-CN'): Promise<SpeakResult> {
     if (this.speechSynthesizerAvailable) {
+      if (speechSynthesis.speaking) {
+        this.cancel();
+        await sleep(100);
+      }
       this.speechSynthesizer.lang = language;
       this.speechSynthesizer.text = message;
       if (!this.voices.length) {
         this.getVoices();
       }
-      this.speechSynthesizer.voice = this.voices.find((voice) => voice.lang === language) || this.voices[0];
-      speechSynthesis.speak(this.speechSynthesizer);
-      return;
+      const voice = this.voices.find((voice) => voice.lang === language);
+      this.speechSynthesizer.voice = voice || this.voices[0];
+      return new Promise((resolve, reject) => {
+        // 播放结束时触发 resolve
+        this.speechSynthesizer.addEventListener('end', () => resolve());
+        // 播放出现错误时触发 reject
+        this.speechSynthesizer.addEventListener('error', (error) => reject(error));
+        speechSynthesis.speak(this.speechSynthesizer);
+      });
     }
     return {
       code: 503,
@@ -46,6 +57,11 @@ export class SpeechSynthesizerService {
       code: 503,
       message: '浏览器不支持 Web Speech API'
     };
+  }
+  cancel() {
+    if (this.speechSynthesizerAvailable) {
+      speechSynthesis.cancel(); // 停止所有正在播放的语音
+    }
   }
 }
 export const speechSynthesizerService = new SpeechSynthesizerService();

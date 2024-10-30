@@ -168,6 +168,7 @@ class WebRTCService {
     const dataArray = new Uint8Array(this.analyser!.fftSize);
     let lastUpdateTime = 0;
     let silenceDuration = 0;
+    let soundDetected = false; // 新增变量，用于标识是否检测到声音
     const checkAudio = (timestamp: number) => {
       if (!this.analyser) return;
 
@@ -181,9 +182,14 @@ class WebRTCService {
       const average = this.calculateAudioAverage(dataArray);
       console.log(average > threshold ? '有声音输入' : '无声音', average);
       if (average > threshold) {
-        silenceDuration = 0;
+        if (!soundDetected) {
+          soundDetected = true; // 声音首次检测到
+          silenceDuration = 0; // 重置无声计时器
+        }
       } else {
-        silenceDuration += updateInterval;
+        if (soundDetected) {
+          silenceDuration += updateInterval; // 只有在首次检测到声音后才开始计时
+        }
       }
       if (silenceDuration >= maxSilenceDuration) {
         console.log('超过6秒无声音，停止检测');

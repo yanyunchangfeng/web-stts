@@ -5,3 +5,4 @@ export * from './tts';
 export * from './request';
 export * from './toggleState';
 export * from './safeJsonParse';
+export * from './sleep';
