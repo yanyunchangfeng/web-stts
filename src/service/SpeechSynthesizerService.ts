@@ -35,11 +35,21 @@ export class SpeechSynthesizerService {
       }
       const voice = this.voices.find((voice) => voice.lang === language);
       this.speechSynthesizer.voice = voice || this.voices[0];
-      return new Promise((resolve, reject) => {
-        // 播放结束时触发 resolve
-        this.speechSynthesizer.addEventListener('end', () => resolve());
-        // 播放出现错误时触发 reject
-        this.speechSynthesizer.addEventListener('error', (error) => reject(error));
+      return new Promise(async (resolve, reject) => {
+        const cleanup = () => {
+          this.speechSynthesizer.removeEventListener('end', onEnd);
+          this.speechSynthesizer.removeEventListener('error', onError);
+        };
+        const onEnd = () => {
+          cleanup();
+          resolve();
+        };
+        const onError = (error: any) => {
+          cleanup();
+          reject(error);
+        };
+        this.speechSynthesizer.addEventListener('end', onEnd);
+        this.speechSynthesizer.addEventListener('error', onError);
         speechSynthesis.speak(this.speechSynthesizer);
       });
     }
