@@ -21,17 +21,17 @@ class TTSService {
     if (combTtsExecStr === CombTTSExecStrategy.BROWSER) {
       result = await this.speak(params);
       if (!result) return;
-      if (cacheAudioBase64Str) return this.cacheBase64ToAudio(cacheAudioBase64Str);
+      if (cacheAudioBase64Str) return await this.cacheBase64ToAudio(cacheAudioBase64Str);
       return await this.tts(params);
     }
-    try {
-      if (cacheAudioBase64Str) return this.cacheBase64ToAudio(cacheAudioBase64Str);
-      result = await this.speak(params); // 在这里执行在ios chrome上可以播放
-      if (!result) return;
-      await this.tts(params);
-    } catch (e) {
-      // this.speak(params); // 在这里执行在ios chrome上无法播放
-    }
+    // try {
+    if (cacheAudioBase64Str) return await this.cacheBase64ToAudio(cacheAudioBase64Str);
+    result = await this.speak(params); // 在这里执行在ios chrome上可以播放
+    if (!result) return;
+    await this.tts(params);
+    // } catch (e) {
+    //   // this.speak(params); // 在这里执行在ios chrome上无法播放
+    // }
   }
   async cacheBase64ToAudio(base64Str: string) {
     const audioBlob = this.atobBase64ToBlob(base64Str, TTSAtobMode.WINDOW);
@@ -73,18 +73,28 @@ class TTSService {
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
     return new Promise((resolve, reject) => {
-      audio.addEventListener('ended', () => {
+      const cleanup = () => {
         URL.revokeObjectURL(audioUrl);
+        audio.removeEventListener('ended', onEnded);
+        audio.removeEventListener('error', onError);
+      };
+
+      const onEnded = () => {
+        cleanup();
         console.log('音频播放结束，已释放资源');
         resolve(0);
-      });
+      };
 
-      audio.addEventListener('error', (error) => {
-        URL.revokeObjectURL(audioUrl);
+      const onError = (error: any) => {
+        cleanup();
         console.error('音频播放失败:', error);
         reject(error);
-      });
+      };
+
+      audio.addEventListener('ended', onEnded);
+      audio.addEventListener('error', onError);
       audio.play().catch((error) => {
+        cleanup();
         console.error('音频播放失败:', error);
         reject(error);
       });

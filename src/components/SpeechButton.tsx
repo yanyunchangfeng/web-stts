@@ -134,7 +134,7 @@ const SpeechButton: FC = () => {
   }, []);
 
   const handleSTTS = async () => {
-    await ttsService.combineTTS({ text });
+    await ttsService.combineTTS({ text }, CombTTSExecStrategy.TTS);
     console.log('ttsService');
     await handleSTT();
   };
