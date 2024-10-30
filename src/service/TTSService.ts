@@ -9,24 +9,24 @@ class TTSService {
     const audioBlob = this.atobBase64ToBlob(audioBase64Str, ttsAtobMode); // js-base64
     await this.playAudio(audioBlob);
   }
-  speak(params: TTSData) {
+  async speak(params: TTSData) {
     if (!this.speechSynthesizerService) {
       this.speechSynthesizerService = new SpeechSynthesizerService();
     }
-    return this.speechSynthesizerService.speak(params.text, params.lang);
+    return await this.speechSynthesizerService.speak(params.text, params.lang);
   }
   async combineTTS(params: TTSData, combTtsExecStr: `${CombTTSExecStrategy}` = CombTTSExecStrategy.BROWSER) {
     const cacheAudioBase64Str = params.audioBase64;
     let result;
     if (combTtsExecStr === CombTTSExecStrategy.BROWSER) {
-      result = this.speak(params);
+      result = await this.speak(params);
       if (!result) return;
       if (cacheAudioBase64Str) return this.cacheBase64ToAudio(cacheAudioBase64Str);
       return await this.tts(params);
     }
     try {
       if (cacheAudioBase64Str) return this.cacheBase64ToAudio(cacheAudioBase64Str);
-      result = this.speak(params); // 在这里执行在ios chrome上可以播放
+      result = await this.speak(params); // 在这里执行在ios chrome上可以播放
       if (!result) return;
       await this.tts(params);
     } catch (e) {
@@ -72,16 +72,22 @@ class TTSService {
   async playAudio(audioBlob: Blob) {
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
-    try {
-      await audio.play();
-      console.log('音频播放成功');
-    } catch (error) {
-      console.error('音频播放失败:', error);
-    }
-    // 释放URL对象
-    audio.addEventListener('ended', () => {
-      URL.revokeObjectURL(audioUrl);
-      console.log('音频播放结束，已释放资源');
+    return new Promise((resolve, reject) => {
+      audio.addEventListener('ended', () => {
+        URL.revokeObjectURL(audioUrl);
+        console.log('音频播放结束，已释放资源');
+        resolve(0);
+      });
+
+      audio.addEventListener('error', (error) => {
+        URL.revokeObjectURL(audioUrl);
+        console.error('音频播放失败:', error);
+        reject(error);
+      });
+      audio.play().catch((error) => {
+        console.error('音频播放失败:', error);
+        reject(error);
+      });
     });
   }
 }

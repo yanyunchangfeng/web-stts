@@ -4,6 +4,9 @@ import React from 'react';
 import { TTSVoice, SpeechResult, CombTTSExecStrategy } from 'src/shared';
 import { ttsService, speechRecognizerService, webRTCService, voiceFusionRequestService } from 'src/service';
 
+const text = `《庄子》是中国道家思想的重要经典，书中通过寓言和对话探讨了自然、自由、生命和死亡的哲学。以下是《庄子》的一些核心思想：
+     无为而治：强调顺应自然，不强求而为，主张自然发展的一种智慧。`;
+
 const SpeechButton: FC = () => {
   const [speechRecording, setSpeechRecording] = useState(false);
   const [speakText, setSpeakText] = useState('hello world');
@@ -130,6 +133,12 @@ const SpeechButton: FC = () => {
     initWebSpeechRecognizer();
   }, []);
 
+  const handleSTTS = async () => {
+    await ttsService.combineTTS({ text });
+    console.log('ttsService');
+    await handleSTT();
+  };
+
   return (
     <>
       <h3>Web SpeechSynthesize API 语音测试 （底层基于浏览器语音合成引擎，无需科学上网）</h3>
@@ -156,6 +165,8 @@ const SpeechButton: FC = () => {
           <audio controls src={URL.createObjectURL(recordedAudio)} />
         </Space>
       )}
+      <h3>TTS&&STT先播报再录音</h3>
+      <Button onClick={handleSTTS}>{rtcRecordingText}</Button>
     </>
   );
 };
