@@ -32,7 +32,7 @@ class WebRTCService {
       this.mediaRecorder.start();
       this.isListening = true;
       this.isNoSpeech = false;
-      this.checkVoice(5);
+      this.checkVoice(40);
       return true;
     } catch (error) {
       this.handleError('Failed to start media recording', error);
