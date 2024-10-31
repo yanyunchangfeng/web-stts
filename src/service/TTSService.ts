@@ -78,19 +78,15 @@ class TTSService {
         audio.removeEventListener('ended', onEnded);
         audio.removeEventListener('error', onError);
       };
-
       const onEnded = () => {
         cleanup();
-        console.log('音频播放结束，已释放资源');
         resolve(0);
       };
-
       const onError = (error: any) => {
         cleanup();
         console.error('音频播放失败:', error);
         reject(error);
       };
-
       audio.addEventListener('ended', onEnded);
       audio.addEventListener('error', onError);
       audio.play().catch((error) => {
