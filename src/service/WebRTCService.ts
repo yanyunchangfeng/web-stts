@@ -10,7 +10,7 @@ class WebRTCService {
   isCheckingAudio = false;
   private audioTracks: MediaStreamTrack[] = [];
   isNoSpeech = false;
-
+  abortController = new AbortController();
   async init(deviceId?: string) {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
@@ -24,6 +24,8 @@ class WebRTCService {
 
   async start() {
     try {
+      this.abortController.abort();
+      this.abortController = new AbortController();
       const deviceId = await this.getDefaultAudioDeviceId();
       await this.init(deviceId);
       if (!this.stream) return false;
@@ -69,6 +71,10 @@ class WebRTCService {
   stop() {
     this.mediaRecorder?.stop();
   }
+  stopAndDiscard() {
+    this.mediaRecorder?.stop();
+    this.abortController.abort();
+  }
   private resetRecordingState() {
     this.isListening = false;
   }
@@ -86,6 +92,9 @@ class WebRTCService {
         try {
           this.stopVoiceCheck();
           this.stopMediaStream();
+          if (this.abortController.signal.aborted) {
+            return reject(new Error('录音已中止'));
+          }
           if (this.isNoSpeech) return reject(SpeechError.NoSpeech);
           const webmBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
           const wavBlob = await webmToWavConverterService.convertWebmToWav(webmBlob);
@@ -177,6 +186,11 @@ class WebRTCService {
         return;
       }
       lastUpdateTime = timestamp;
+      if (this.abortController.signal.aborted) {
+        this.stopVoiceCheck(); // 清理资源
+        this.stop();
+        return;
+      }
 
       this.analyser.getByteTimeDomainData(dataArray);
       const average = this.calculateAudioAverage(dataArray);

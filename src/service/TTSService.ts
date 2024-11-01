@@ -5,6 +5,7 @@ import { voiceFusionRequestService, SpeechSynthesizerService } from 'src/service
 class TTSService {
   speechSynthesizerService!: SpeechSynthesizerService;
   currentAudio?: HTMLAudioElement; // 当前播放的音频
+  abortController = new AbortController();
   async tts(params: TTSData, ttsAtobMode: TTSAtobMode = TTSAtobMode.JSBASE64) {
     this.stopAudio();
     const audioBase64Str = await voiceFusionRequestService.tts(params);
@@ -18,19 +19,28 @@ class TTSService {
     return await this.speechSynthesizerService.speak(params.text, params.lang);
   }
   async combineTTS(params: TTSData, combTtsExecStr: `${CombTTSExecStrategy}` = CombTTSExecStrategy.BROWSER) {
+    this.abortController.abort(); // 先中止任何现有操作
+    this.abortController = new AbortController();
     const cacheAudioBase64Str = params.audioBase64;
     let result;
     if (combTtsExecStr === CombTTSExecStrategy.BROWSER) {
       result = await this.speak(params);
       if (!result) return;
-      if (cacheAudioBase64Str) return await this.cacheBase64ToAudio(cacheAudioBase64Str);
+      if (cacheAudioBase64Str) {
+        return await this.cacheBase64ToAudio(cacheAudioBase64Str);
+      }
       return await this.tts(params);
     }
     // try {
-    if (cacheAudioBase64Str) return await this.cacheBase64ToAudio(cacheAudioBase64Str);
+
+    if (cacheAudioBase64Str) {
+      return await this.cacheBase64ToAudio(cacheAudioBase64Str);
+    }
     result = await this.speak(params); // 在这里执行在ios chrome上可以播放
     if (!result) return;
     await this.tts(params);
+
+    // await this.tts(params);
     // } catch (e) {
     //   // this.speak(params); // 在这里执行在ios chrome上无法播放
     // }
@@ -81,6 +91,7 @@ class TTSService {
         URL.revokeObjectURL(audioUrl);
         audio.removeEventListener('ended', onEnded);
         audio.removeEventListener('error', onError);
+        audio.removeEventListener('timeupdate', onTimeUpdate);
         this.currentAudio = undefined;
       };
       const onEnded = () => {
@@ -92,8 +103,17 @@ class TTSService {
         console.error('音频播放失败:', error);
         reject(error);
       };
+      const onTimeUpdate = () => {
+        // 在播放过程中检查是否需要中止
+        if (this.abortController.signal.aborted) {
+          this.stopAudio(); // 立即停止播放
+          cleanup();
+          reject(new Error('音频播放已中止'));
+        }
+      };
       audio.addEventListener('ended', onEnded);
       audio.addEventListener('error', onError);
+      audio.addEventListener('timeupdate', onTimeUpdate);
       audio.play().catch((error) => {
         cleanup();
         console.error('音频播放失败:', error);
@@ -108,6 +128,9 @@ class TTSService {
       this.currentAudio.currentTime = 0; // 重置播放时间
       this.currentAudio = undefined; // 清空当前音频
     }
+  }
+  abortCombineTTS() {
+    this.abortController.abort(); // 调用此方法以终止当前的 TTS 操作
   }
 }
 

@@ -42,6 +42,9 @@ const SpeechButton: FC = () => {
       voc: TTSVoice.woman
     });
   };
+  const handleStopSpeechSynthesizer = () => {
+    ttsService.speechSynthesizerService.abortSpeak();
+  };
 
   const handleTTS = () => {
     ttsService.tts({
@@ -139,25 +142,41 @@ const SpeechButton: FC = () => {
     // await handleSTT();
   };
 
+  const handleStopSTT = async () => {
+    webRTCService.stopAndDiscard();
+  };
+  const handleStopCombineTTS = async () => {
+    ttsService.abortCombineTTS();
+    ttsService.speechSynthesizerService.abortSpeak();
+  };
+
   return (
     <>
       <h3>Web SpeechSynthesize API 语音测试 （底层基于浏览器语音合成引擎，无需科学上网）</h3>
       <Input placeholder="请输入语音内容" defaultValue={speakText} onChange={(e) => setSpeakText(e.target.value)} />
-      <Button onClick={handleSpeechSynthesizer} style={{ marginTop: '12px' }}>
-        Web SpeechSynthesize 播放语音
-      </Button>
+      <Space style={{ marginTop: 12 }}>
+        <Button onClick={handleSpeechSynthesizer}>Web SpeechSynthesize 播放语音</Button>
+        <Button onClick={handleStopSpeechSynthesizer}>Stop Web SpeechSynthesize 播放语音</Button>
+      </Space>
       <h3>TTS API 语音测试 （xunfeiTTS）</h3>
       <Button onClick={handleTTS}>TTS API播放语音</Button>
       <h3>
         Combine TTS 语音测试（有服务端audioBase64缓存先执行缓存播放,没有的话执行xunfeiTTS
         捕获错误后执行浏览器语音合成引擎 提高成功率）
       </h3>
-      <Button onClick={handleCombineTTS}>Combine TTS 播放语音</Button>
+      <Space>
+        <Button onClick={handleCombineTTS}>Combine TTS 播放语音</Button>
+        <Button onClick={handleStopCombineTTS}>Stop Combine TTS 播放语音</Button>
+      </Space>
       <h3>Web SpeechRecognizer API 语音测试（底层依赖于Google的云服务器，需要科学上网）</h3>
       <Button onClick={handleSpeechRecognizer}>{speechRecordingText}</Button>
       <Input.TextArea value={speechResultText} style={{ marginTop: 12 }} autoSize={{ minRows: 2, maxRows: 6 }} />
       <h3>STT API 语音测试 （xunfeiSTT）</h3>
-      <Button onClick={handleSTT}>{rtcRecordingText}</Button>
+      <Space>
+        <Button onClick={handleSTT}>{rtcRecordingText}</Button>
+        <Button onClick={handleStopSTT}>终止丢掉录音</Button>
+      </Space>
+
       <Input.TextArea value={rtcResultText} style={{ marginTop: 12 }} autoSize={{ minRows: 2, maxRows: 6 }} />
       {recordedAudio && (
         <Space style={{ marginTop: '12px' }}>
