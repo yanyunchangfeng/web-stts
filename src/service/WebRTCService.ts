@@ -32,7 +32,7 @@ class WebRTCService {
       this.mediaRecorder.start();
       this.isListening = true;
       this.isNoSpeech = false;
-      this.checkVoice(40);
+      this.checkVoice(22);
       return true;
     } catch (error) {
       this.handleError('Failed to start media recording', error);
@@ -182,14 +182,10 @@ class WebRTCService {
       const average = this.calculateAudioAverage(dataArray);
       console.log(average > threshold ? '有声音输入' : '无声音', average);
       if (average > threshold) {
-        if (!soundDetected) {
-          soundDetected = true; // 声音首次检测到
-          silenceDuration = 0; // 重置无声计时器
-        }
-      } else {
-        if (soundDetected) {
-          silenceDuration += updateInterval; // 只有在首次检测到声音后才开始计时
-        }
+        soundDetected = true; // 声音检测到
+        silenceDuration = 0; // 重置无声计时器
+      } else if (soundDetected) {
+        silenceDuration += updateInterval; // 检测到声音后才开始计时
       }
       if (silenceDuration >= maxSilenceDuration) {
         console.log('超过6秒无声音，停止检测');

@@ -4,7 +4,9 @@ import { voiceFusionRequestService, SpeechSynthesizerService } from 'src/service
 
 class TTSService {
   speechSynthesizerService!: SpeechSynthesizerService;
+  currentAudio?: HTMLAudioElement; // 当前播放的音频
   async tts(params: TTSData, ttsAtobMode: TTSAtobMode = TTSAtobMode.JSBASE64) {
+    this.stopAudio();
     const audioBase64Str = await voiceFusionRequestService.tts(params);
     const audioBlob = this.atobBase64ToBlob(audioBase64Str, ttsAtobMode); // js-base64
     await this.playAudio(audioBlob);
@@ -34,6 +36,7 @@ class TTSService {
     // }
   }
   async cacheBase64ToAudio(base64Str: string) {
+    this.stopAudio();
     const audioBlob = this.atobBase64ToBlob(base64Str, TTSAtobMode.WINDOW);
     await this.playAudio(audioBlob);
   }
@@ -72,11 +75,13 @@ class TTSService {
   async playAudio(audioBlob: Blob) {
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
+    this.currentAudio = audio;
     return new Promise((resolve, reject) => {
       const cleanup = () => {
         URL.revokeObjectURL(audioUrl);
         audio.removeEventListener('ended', onEnded);
         audio.removeEventListener('error', onError);
+        this.currentAudio = undefined;
       };
       const onEnded = () => {
         cleanup();
@@ -95,6 +100,14 @@ class TTSService {
         reject(error);
       });
     });
+  }
+  // 新增方法用于取消播放
+  stopAudio() {
+    if (this.currentAudio) {
+      this.currentAudio.pause(); // 暂停音频播放
+      this.currentAudio.currentTime = 0; // 重置播放时间
+      this.currentAudio = undefined; // 清空当前音频
+    }
   }
 }
 
