@@ -22,9 +22,9 @@ class TTSService {
     this.abortController.abort(); // 先中止任何现有操作
     this.abortController = new AbortController();
     const cacheAudioBase64Str = params.audioBase64;
-    let result;
+
     if (combTtsExecStr === CombTTSExecStrategy.BROWSER) {
-      result = await this.speak(params);
+      const result = await this.speak(params);
       if (!result) return;
       if (cacheAudioBase64Str) {
         return await this.cacheBase64ToAudio(cacheAudioBase64Str);
@@ -32,14 +32,10 @@ class TTSService {
       return await this.tts(params);
     }
     try {
-      if (cacheAudioBase64Str) {
-        return await this.cacheBase64ToAudio(cacheAudioBase64Str);
-      }
-      // result = await this.speak(params); // 在这里执行在ios chrome上可以播放
-      // if (!result) return;
+      if (cacheAudioBase64Str) return await this.cacheBase64ToAudio(cacheAudioBase64Str);
       await this.tts(params);
     } catch (e) {
-      await this.speak(params); // 在这里执行在ios chrome上无法播放
+      await this.speak(params);
     }
   }
   async cacheBase64ToAudio(base64Str: string) {
