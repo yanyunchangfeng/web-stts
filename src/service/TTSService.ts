@@ -31,19 +31,16 @@ class TTSService {
       }
       return await this.tts(params);
     }
-    // try {
-
-    if (cacheAudioBase64Str) {
-      return await this.cacheBase64ToAudio(cacheAudioBase64Str);
+    try {
+      if (cacheAudioBase64Str) {
+        return await this.cacheBase64ToAudio(cacheAudioBase64Str);
+      }
+      // result = await this.speak(params); // 在这里执行在ios chrome上可以播放
+      // if (!result) return;
+      await this.tts(params);
+    } catch (e) {
+      await this.speak(params); // 在这里执行在ios chrome上无法播放
     }
-    result = await this.speak(params); // 在这里执行在ios chrome上可以播放
-    if (!result) return;
-    await this.tts(params);
-
-    // await this.tts(params);
-    // } catch (e) {
-    //   // this.speak(params); // 在这里执行在ios chrome上无法播放
-    // }
   }
   async cacheBase64ToAudio(base64Str: string) {
     this.stopAudio();
@@ -100,7 +97,6 @@ class TTSService {
       };
       const onError = (error: any) => {
         cleanup();
-        console.error('音频播放失败:', error);
         reject(error);
       };
       const onTimeUpdate = () => {
@@ -116,7 +112,6 @@ class TTSService {
       audio.addEventListener('timeupdate', onTimeUpdate);
       audio.play().catch((error) => {
         cleanup();
-        console.error('音频播放失败:', error);
         reject(error);
       });
     });
