@@ -43,7 +43,7 @@ const SpeechButton: FC = () => {
     });
   };
   const handleStopSpeechSynthesizer = () => {
-    ttsService.speechSynthesizerService.abortSpeak();
+    ttsService.speechSynthesizerService?.abortSpeak();
   };
 
   const handleTTS = () => {
@@ -137,9 +137,8 @@ const SpeechButton: FC = () => {
   }, []);
 
   const handleSTTS = async () => {
-    await ttsService.combineTTS({ text, audioBase64 }, CombTTSExecStrategy.TTS);
-    console.log('ttsService');
-    // await handleSTT();
+    await ttsService.combineTTS({ text }, CombTTSExecStrategy.TTS);
+    await handleSTT();
   };
 
   const handleStopSTT = async () => {
