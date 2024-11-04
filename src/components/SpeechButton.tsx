@@ -148,7 +148,10 @@ const SpeechButton: FC = () => {
     ttsService.abortCombineTTS();
     ttsService.speechSynthesizerService.abortSpeak();
   };
-
+  const handleStopSTTS = async () => {
+    handleStopCombineTTS();
+    handleStopSTT();
+  };
   return (
     <>
       <h3>Web SpeechSynthesize API 语音测试 （底层基于浏览器语音合成引擎，无需科学上网）</h3>
@@ -173,7 +176,7 @@ const SpeechButton: FC = () => {
       <h3>STT API 语音测试 （xunfeiSTT）</h3>
       <Space>
         <Button onClick={handleSTT}>{rtcRecordingText}</Button>
-        <Button onClick={handleStopSTT}>终止丢掉录音</Button>
+        <Button onClick={handleStopSTT}>StopAndDiscard 录音</Button>
       </Space>
 
       <Input.TextArea value={rtcResultText} style={{ marginTop: 12 }} autoSize={{ minRows: 2, maxRows: 6 }} />
@@ -184,7 +187,10 @@ const SpeechButton: FC = () => {
         </Space>
       )}
       <h3>TTS&&STT先播报再录音</h3>
-      <Button onClick={handleSTTS}>{rtcRecordingText}</Button>
+      <Space>
+        <Button onClick={handleSTTS}>播报录音</Button>
+        <Button onClick={handleStopSTTS}>Stop 播报录音</Button>
+      </Space>
     </>
   );
 };

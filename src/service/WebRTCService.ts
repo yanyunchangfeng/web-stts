@@ -22,7 +22,7 @@ class WebRTCService {
     }
   }
 
-  async start() {
+  async start(threshold: number = 22) {
     try {
       this.abortController.abort();
       this.abortController = new AbortController();
@@ -34,7 +34,7 @@ class WebRTCService {
       this.mediaRecorder.start();
       this.isListening = true;
       this.isNoSpeech = false;
-      this.checkVoice(22);
+      this.checkVoice(threshold);
       return true;
     } catch (error) {
       this.handleError('Failed to start media recording', error);
@@ -95,7 +95,7 @@ class WebRTCService {
           if (this.abortController.signal.aborted) {
             return reject(new Error('录音已中止'));
           }
-          if (this.isNoSpeech) return reject(SpeechError.NoSpeech);
+          // if (this.isNoSpeech) return reject(SpeechError.NoSpeech); // 没有检测到语音 要正常进行
           const webmBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
           const wavBlob = await webmToWavConverterService.convertWebmToWav(webmBlob);
           resolve(wavBlob);
