@@ -1,5 +1,6 @@
 import { webmToWavConverterService } from 'src/service';
 import { SpeechError } from 'src/shared';
+
 class WebRTCService {
   private mediaRecorder!: MediaRecorder;
   private audioChunks: Blob[] = [];
@@ -9,8 +10,9 @@ class WebRTCService {
   private analyser: AnalyserNode | null = null;
   isCheckingAudio = false;
   private audioTracks: MediaStreamTrack[] = [];
-  isNoSpeech = false;
+  private isNoSpeech = false;
   abortController = new AbortController();
+  private isMuted = false;
   async init(deviceId?: string) {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
@@ -78,12 +80,16 @@ class WebRTCService {
   private resetRecordingState() {
     this.isListening = false;
   }
+  private resetAudioMuteState() {
+    this.isMuted = false;
+  }
   private resetAudioData() {
     this.audioChunks = [];
     this.audioTracks = [];
   }
   private resetAudioInit() {
     this.resetRecordingState();
+    this.resetAudioMuteState();
     this.resetAudioData();
   }
   async onResult(): Promise<Blob> {
@@ -186,12 +192,9 @@ class WebRTCService {
         return;
       }
       lastUpdateTime = timestamp;
-      if (this.abortController.signal.aborted) {
-        this.stopVoiceCheck(); // 清理资源
-        this.stop();
-        return;
+      if (this.isMuted) {
+        silenceDuration = 0;
       }
-
       this.analyser.getByteTimeDomainData(dataArray);
       const average = this.calculateAudioAverage(dataArray);
       console.log(average > threshold ? '有声音输入' : '无声音', average);
@@ -230,6 +233,19 @@ class WebRTCService {
       this.analyser = null;
     }
     this.isCheckingAudio = false;
+  }
+  mute() {
+    if (!this.isMuted) {
+      this.audioTracks.forEach((track) => (track.enabled = false));
+      this.isMuted = true;
+    }
+  }
+
+  unmute() {
+    if (this.isMuted) {
+      this.audioTracks.forEach((track) => (track.enabled = true));
+      this.isMuted = false;
+    }
   }
 }
 

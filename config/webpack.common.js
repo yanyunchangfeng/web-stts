@@ -106,8 +106,8 @@ const webpackConfig = {
   },
   experiments: {
     topLevelAwait: true,
-    asyncWebAssembly: true,
-    lazyCompilation: isDev ? true : false // 按需编译
+    asyncWebAssembly: true
+    // lazyCompilation: isDev ? true : false // 按需编译
   },
   module: {
     // 用于配置模块加载规则，例如针对什么类型的资源需要使用哪些Loader进行处理
