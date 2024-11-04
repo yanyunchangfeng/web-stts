@@ -13,13 +13,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
       - name: Build & Test Lib
         uses: actions/setup-node@v3
         with:
           node-version: '21.x'
-      - run: yarn install
-      - run: yarn ${{env.TEST_SCRIPT}}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: true
+
+      - run: pnpm ${{env.TEST_SCRIPT}}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:

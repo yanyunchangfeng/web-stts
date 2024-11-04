@@ -29,17 +29,22 @@ jobs:
 
       - name: Setup Node
         uses: actions/setup-node@v3
+        with:
+          node-version: '21.x'
 
-      - name: Install dependencies
-        uses: bahmutov/npm-install@v1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: true
 
       - name: Test project
-        run: npm run ${{env.TEST_SCRIPT}}
+        run: pnpm ${{env.TEST_SCRIPT}}
 
       - name: Build project
-        run: npm run build
+        run: pnpm build
 
-      - name: Deploy to remote gh-pages branch
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist

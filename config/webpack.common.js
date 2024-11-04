@@ -9,6 +9,7 @@ const UnusedWebpackPlugin = require('unused-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const webpackBar = require('webpackbar');
+
 const { NODE_ENV, ANALYZE, UNUSED, UMD_LIBRARY, SMP } = process.env;
 const isDev = NODE_ENV === 'development',
   isAnalyzerMode = ANALYZE === '1',
@@ -24,7 +25,7 @@ class NoopPlugin {
 }
 const webpackConfig = {
   context: process.cwd(), // 项目执行上下文路径；
-  mode: process.env.NODE_ENV, //编译模式短语，支持 development、production 等值，可以理解为一种声明环境的短语
+  mode: NODE_ENV, //编译模式短语，支持 development、production 等值，可以理解为一种声明环境的短语
   entry: {
     main: './src/index.tsx'
   },
@@ -88,7 +89,7 @@ const webpackConfig = {
   target: 'web', //用于配置编译产物的目标运行环境，支持 web、node、electron 等值，不同值最终产物会有所差异
   resolve: {
     // 用于配置模块路径解析规则，可用于帮助Webpack更精确、高效地找到指定模块
-    modules: [path.resolve('node_modules')], // 解析第三方包
+    // modules: [path.resolve('node_modules')], // 解析第三方包 (pnpm 不能用 因此注释) 或者改为 [path.resolve('node_modules'),'node_modules'],
     extensions: ['.ts', '.tsx', '.js', '.css', '.less', '.scss', '.json'], // 文件后缀名 先后顺序查找
     mainFields: ['jsnext:main', 'browser', 'module', 'main', 'style'], // 优先使用 jsnext:main 中指向的 ES6 模块化语法的文件
     mainFiles: ['index'], // 入口文件的名字 默认是index
