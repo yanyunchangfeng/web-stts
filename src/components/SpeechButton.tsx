@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useMemo, useState } from 'react';
-import { Button, Input, Space } from 'antd';
+import { Button, Input, Space, message } from 'antd';
 import { AudioOutlined, AudioMutedOutlined } from '@ant-design/icons';
 import { TTSVoice, SpeechResult, CombTTSExecStrategy } from 'src/shared';
 import { ttsService, speechRecognizerService, webRTCService, voiceFusionRequestService } from 'src/service';
@@ -99,7 +99,7 @@ const SpeechButton: FC = () => {
         setRtcRecording(false);
         return;
       }
-      const success = await webRTCService.start();
+      const success = await webRTCService.start(5);
       if (!success) return;
       setRtcRecording(true);
       setRecordedAudio(null);
@@ -148,7 +148,7 @@ const SpeechButton: FC = () => {
   };
   const handleStopCombineTTS = async () => {
     ttsService.abortCombineTTS();
-    ttsService.speechSynthesizerService.abortSpeak();
+    ttsService.speechSynthesizerService?.abortSpeak();
   };
   const handleStopSTTS = async () => {
     handleStopCombineTTS();
@@ -156,10 +156,18 @@ const SpeechButton: FC = () => {
   };
   const handleToggleMuted = React.useCallback(() => {
     if (!isMuted) {
-      webRTCService.mute();
+      const result = webRTCService.mute();
+      if (result) {
+        message.warning(result.message);
+        return;
+      }
       setIsMuted(true);
     } else {
-      webRTCService.unmute();
+      const result = webRTCService.unmute();
+      if (result) {
+        message.warning(result.message);
+        return;
+      }
       setIsMuted(false);
     }
   }, [isMuted]);

@@ -16,11 +16,16 @@ class VoiceFusionRequestService {
     return axios.post('/msService/chatcustomer/audio/web/tts', data);
   }
   async stt(data: FormData) {
-    return axios.post('/msService/chatcustomer/audio/web/stt', data, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+    return axios.post(
+      '/msService/chatcustomer/audio/web/stt',
+      // return axios.post('/msService/chatcustomer/audio/web/audio2Text',
+      data,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       }
-    });
+    );
   }
 }
 

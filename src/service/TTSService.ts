@@ -75,7 +75,7 @@ class TTSService {
   uint8ArrayToBlob(uint8Array: Uint8Array, mimeType: AudioType = AudioType.WAV) {
     return new Blob([uint8Array], { type: mimeType });
   }
-  async playAudio(audioBlob: Blob) {
+  async playAudio(audioBlob: Blob): Promise<void> {
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
     this.currentAudio = audio;
@@ -89,7 +89,7 @@ class TTSService {
       };
       const onEnded = () => {
         cleanup();
-        resolve(0);
+        resolve();
       };
       const onError = (error: any) => {
         cleanup();
@@ -100,7 +100,7 @@ class TTSService {
         if (this.abortController.signal.aborted) {
           this.stopAudio(); // 立即停止播放
           cleanup();
-          reject(new Error('音频播放已中止'));
+          resolve();
         }
       };
       audio.addEventListener('ended', onEnded);

@@ -13,6 +13,7 @@ class WebRTCService {
   private isNoSpeech = false;
   abortController = new AbortController();
   private isMuted = false;
+
   async init(deviceId?: string) {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
@@ -28,6 +29,7 @@ class WebRTCService {
     try {
       this.abortController.abort();
       this.abortController = new AbortController();
+      this.abortController.signal.addEventListener('abort', this.onAbort);
       const deviceId = await this.getDefaultAudioDeviceId();
       await this.init(deviceId);
       if (!this.stream) return false;
@@ -43,6 +45,10 @@ class WebRTCService {
       return false;
     }
   }
+  private onAbort = () => {
+    this.abortController.signal.removeEventListener('abort', this.onAbort);
+    this.stop(); // 停止录音
+  };
   getAudioTracks() {
     if (!this.audioTracks.length) {
       this.audioTracks = this.stream?.getAudioTracks();
@@ -67,14 +73,15 @@ class WebRTCService {
 
   private setupMediaRecorder() {
     this.mediaRecorder = new MediaRecorder(this.stream);
-    this.mediaRecorder.ondataavailable = (event) => this.audioChunks.push(event.data);
+    this.mediaRecorder.ondataavailable = (event) => {
+      if (!this.isMuted) this.audioChunks.push(event.data);
+    };
   }
 
   stop() {
     this.mediaRecorder?.stop();
   }
   stopAndDiscard() {
-    this.mediaRecorder?.stop();
     this.abortController.abort();
   }
   private resetRecordingState() {
@@ -156,7 +163,7 @@ class WebRTCService {
     audio.onended = () => URL.revokeObjectURL(url);
   }
 
-  checkVoice(threshold = 20, updateInterval = 200, maxSilenceDuration = 6000) {
+  checkVoice(threshold = 20, updateInterval = 200, maxSilenceDuration = 3000) {
     if (!this.stream) {
       console.warn('No stream available for analysis');
       return;
@@ -205,7 +212,7 @@ class WebRTCService {
         silenceDuration += updateInterval; // 检测到声音后才开始计时
       }
       if (silenceDuration >= maxSilenceDuration) {
-        console.log('超过6秒无声音，停止检测');
+        console.log('超过3秒无声音，停止检测');
         this.isNoSpeech = true;
         this.stopVoiceCheck(); // 停止检测
         this.stop();
@@ -235,6 +242,12 @@ class WebRTCService {
     this.isCheckingAudio = false;
   }
   mute() {
+    if (!this.isListening) {
+      return {
+        code: 503,
+        message: '录音服务未启动'
+      };
+    }
     if (!this.isMuted) {
       this.audioTracks.forEach((track) => (track.enabled = false));
       this.isMuted = true;
@@ -242,6 +255,12 @@ class WebRTCService {
   }
 
   unmute() {
+    if (!this.isListening) {
+      return {
+        code: 503,
+        message: '录音服务未启动'
+      };
+    }
     if (this.isMuted) {
       this.audioTracks.forEach((track) => (track.enabled = true));
       this.isMuted = false;
