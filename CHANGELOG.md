@@ -1,3 +1,9 @@
+# [1.1.0](https://github.com/yanyunchangfeng/web-stts/compare/v1.0.0...v1.1.0) (2024-11-05)
+
+### Features
+
+- add muted ([dd7527c](https://github.com/yanyunchangfeng/web-stts/commit/dd7527c2d7c2eb372bf526dcfcfdb6bc07c7ee6a))
+
 # 1.0.0 (2024-11-04)
 
 ### Bug Fixes
