@@ -50,7 +50,7 @@ export class SpeechSynthesizerService {
           if (this.abortController.signal.aborted) {
             this.cancel(); // 立即停止播放
             cleanup();
-            reject(new Error('音频播放已中止'));
+            reject();
           }
         };
         const onError = (error: any) => {
