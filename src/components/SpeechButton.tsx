@@ -99,7 +99,7 @@ const SpeechButton: FC = () => {
         setRtcRecording(false);
         return;
       }
-      const success = await webRTCService.start(5);
+      const success = await webRTCService.start({ threshold: 5, maxSilenceDuration: 6000 });
       if (!success) return;
       setRtcRecording(true);
       setRecordedAudio(null);
@@ -156,14 +156,14 @@ const SpeechButton: FC = () => {
   };
   const handleToggleMuted = React.useCallback(() => {
     if (!isMuted) {
-      const result = webRTCService.mute();
+      const result = webRTCService.mute('静音无法操作');
       if (result) {
         message.warning(result.message);
         return;
       }
       setIsMuted(true);
     } else {
-      const result = webRTCService.unmute();
+      const result = webRTCService.unmute('取消静音无法操作');
       if (result) {
         message.warning(result.message);
         return;
