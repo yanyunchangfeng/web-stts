@@ -8,12 +8,18 @@ class WebRTCService {
   private stream!: MediaStream;
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
-  isCheckingAudio = false;
+  private isCheckingAudio = false;
   private audioTracks: MediaStreamTrack[] = [];
   private isNoSpeech = false;
   abortController = new AbortController();
   private isMuted = false;
-
+  private defaultStartOptions = {
+    threshold: 22,
+    updateInterval: 200,
+    maxSilenceDuration: 3000,
+    noSpeechIsError: false
+  };
+  private defaultMuteMessage = '录音服务未启用';
   async init(deviceId?: string) {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
@@ -25,8 +31,9 @@ class WebRTCService {
     }
   }
 
-  async start(threshold: number = 22) {
+  async start(options: Partial<typeof this.defaultStartOptions> = {}) {
     try {
+      Object.assign(this.defaultStartOptions, options);
       this.abortController.abort();
       this.abortController = new AbortController();
       this.abortController.signal.addEventListener('abort', this.onAbort);
@@ -38,7 +45,12 @@ class WebRTCService {
       this.mediaRecorder.start();
       this.isListening = true;
       this.isNoSpeech = false;
-      this.checkVoice(threshold);
+      this.isMuted = false;
+      this.checkVoice(
+        this.defaultStartOptions.threshold,
+        this.defaultStartOptions.updateInterval,
+        this.defaultStartOptions.maxSilenceDuration
+      );
       return true;
     } catch (error) {
       this.handleError('Failed to start media recording', error);
@@ -108,7 +120,7 @@ class WebRTCService {
           if (this.abortController.signal.aborted) {
             return reject(new Error('录音已中止'));
           }
-          // if (this.isNoSpeech) return reject(SpeechError.NoSpeech); // 没有检测到语音 要正常进行
+          if (this.isNoSpeech && this.defaultStartOptions.noSpeechIsError) return reject(SpeechError.NoSpeech); // 没有检测到语音是否抛出异常
           const webmBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
           const wavBlob = await webmToWavConverterService.convertWebmToWav(webmBlob);
           resolve(wavBlob);
@@ -135,7 +147,6 @@ class WebRTCService {
 
   private handleError(message: string, error: any) {
     console.error(message, error);
-    // 这里可以添加用户提示
   }
 
   downloadAudio(blob: Blob) {
@@ -212,7 +223,7 @@ class WebRTCService {
         silenceDuration += updateInterval; // 检测到声音后才开始计时
       }
       if (silenceDuration >= maxSilenceDuration) {
-        console.log('超过3秒无声音，停止检测');
+        console.log(`超过${maxSilenceDuration / 1000}秒无声音，停止检测`);
         this.isNoSpeech = true;
         this.stopVoiceCheck(); // 停止检测
         this.stop();
@@ -241,11 +252,11 @@ class WebRTCService {
     }
     this.isCheckingAudio = false;
   }
-  mute() {
+  mute(message = this.defaultMuteMessage) {
     if (!this.isListening) {
       return {
         code: 503,
-        message: '录音服务未启动'
+        message
       };
     }
     if (!this.isMuted) {
@@ -254,11 +265,11 @@ class WebRTCService {
     }
   }
 
-  unmute() {
+  unmute(message = this.defaultMuteMessage) {
     if (!this.isListening) {
       return {
         code: 503,
-        message: '录音服务未启动'
+        message
       };
     }
     if (this.isMuted) {
