@@ -50,12 +50,12 @@ export class SpeechSynthesizerService {
           if (this.abortController.signal.aborted) {
             this.cancel(); // 立即停止播放
             cleanup();
-            reject();
+            resolve();
           }
         };
         const onError = (error: any) => {
           cleanup();
-          reject(error);
+          resolve();
         };
         this.speechSynthesizer.addEventListener('end', onEnd);
         this.speechSynthesizer.addEventListener('boundary', onBoundary);
@@ -83,8 +83,8 @@ export class SpeechSynthesizerService {
       speechSynthesis.cancel(); // 停止所有正在播放的语音
     }
   }
-  abortSpeak() {
-    this.abortController.abort();
+  abortSpeak(reason = 'stop speechSynthesis play') {
+    this.abortController.abort(reason);
   }
 }
 export const speechSynthesizerService = new SpeechSynthesizerService();

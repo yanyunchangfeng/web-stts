@@ -120,8 +120,9 @@ class TTSService {
       this.currentAudio = undefined; // 清空当前音频
     }
   }
-  abortCombineTTS(reason: string = 'stop play audio') {
+  abortPlayAudio(reason: string = 'stop play audio') {
     this.abortController.abort(reason); // 调用此方法以终止当前的 TTS 操作
+    this.speechSynthesizerService?.abortSpeak(reason);
   }
 }
 
