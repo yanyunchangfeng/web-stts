@@ -144,7 +144,7 @@ const SpeechButton: FC = () => {
   };
 
   const handleStopSTT = async () => {
-    webRTCService.stopAndDiscard();
+    webRTCService.abortRecording();
   };
   const handleStopCombineTTS = async () => {
     ttsService.abortCombineTTS();
