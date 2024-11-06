@@ -13,7 +13,11 @@ class VoiceFusionRequestService {
     });
   }
   async tts(data: TTSData): Promise<string> {
-    return axios.post('/msService/chatcustomer/audio/web/tts', data);
+    return axios.post(
+      // '/msService/chatcustomer/audio/web/tts',
+      '/dev/text2voice',
+      data
+    );
   }
   async stt(data: FormData) {
     return axios.post(

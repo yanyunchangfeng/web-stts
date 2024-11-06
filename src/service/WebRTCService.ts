@@ -11,7 +11,7 @@ class WebRTCService {
   private isCheckingAudio = false;
   private audioTracks: MediaStreamTrack[] = [];
   private isNoSpeech = false;
-  abortController = new AbortController();
+  private abortController = new AbortController();
   private isMuted = false;
   private defaultStartOptions = {
     threshold: 22,
@@ -42,10 +42,9 @@ class WebRTCService {
       if (!this.stream) return false;
       this.setupMediaRecorder();
       this.enAbledAudioTracks();
+      this.initAudioState();
       this.mediaRecorder.start();
-      this.isListening = true;
-      this.isNoSpeech = false;
-      this.isMuted = false;
+      this.initRecordingState();
       this.checkVoice(
         this.defaultStartOptions.threshold,
         this.defaultStartOptions.updateInterval,
@@ -93,22 +92,34 @@ class WebRTCService {
   stop() {
     this.mediaRecorder?.stop();
   }
-  stopAndDiscard() {
-    this.abortController.abort();
+  abortRecording(reason = 'abort recordig and discard') {
+    this.abortController.abort(reason);
   }
   private resetRecordingState() {
     this.isListening = false;
   }
+  private initRecordingState() {
+    this.isListening = true;
+  }
   private resetAudioMuteState() {
     this.isMuted = false;
+  }
+  private resetNoSpeechState() {
+    this.isNoSpeech = false;
   }
   private resetAudioData() {
     this.audioChunks = [];
     this.audioTracks = [];
   }
-  private resetAudioInit() {
+  private resetAudioState() {
     this.resetRecordingState();
     this.resetAudioMuteState();
+    this.resetNoSpeechState();
+    this.resetAudioData();
+  }
+  private initAudioState() {
+    this.resetAudioMuteState();
+    this.resetNoSpeechState();
     this.resetAudioData();
   }
   async onResult(): Promise<Blob> {
@@ -118,7 +129,7 @@ class WebRTCService {
           this.stopVoiceCheck();
           this.stopMediaStream();
           if (this.abortController.signal.aborted) {
-            return reject(new Error('录音已中止'));
+            return reject(new Error(this.abortController.signal.reason));
           }
           if (this.isNoSpeech && this.defaultStartOptions.noSpeechIsError) return reject(SpeechError.NoSpeech); // 没有检测到语音是否抛出异常
           const webmBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
@@ -128,12 +139,12 @@ class WebRTCService {
           this.handleError('Error converting WebM to WAV', error);
           reject(error);
         } finally {
-          this.resetAudioInit();
+          this.resetAudioState();
         }
       };
 
       this.mediaRecorder.onerror = (event) => {
-        this.resetAudioInit();
+        this.resetAudioState();
         const error = (event as any).error;
         this.handleError('MediaRecorder error', error);
         reject(error?.message || 'Unknown error');
