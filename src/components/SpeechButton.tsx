@@ -102,7 +102,7 @@ const SpeechButton: FC = () => {
         setRtcRecording(false);
         return;
       }
-      const success = await webRTCService.start({ threshold: 5, maxSilenceDuration: 6000 });
+      const success = await webRTCService.start({ threshold: 5, maxSilenceDuration: 1000 * 60 });
       if (!success) return;
       intervalRef.current = setInterval(() => {
         setAverage(Number(webRTCService.average.toFixed(1)));
