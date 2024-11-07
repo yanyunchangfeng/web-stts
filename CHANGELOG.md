@@ -1,3 +1,9 @@
+# [1.2.0-rc.1](https://github.com/yanyunchangfeng/web-stts/compare/v1.1.0...v1.2.0-rc.1) (2024-11-07)
+
+### Features
+
+- updatereadme ([fd01e56](https://github.com/yanyunchangfeng/web-stts/commit/fd01e56a536c93305271108f6ff4528be9375536))
+
 # [1.1.0](https://github.com/yanyunchangfeng/web-stts/compare/v1.0.0...v1.1.0) (2024-11-05)
 
 ### Features
