@@ -104,6 +104,7 @@ const SpeechButton: FC = () => {
       }
       const success = await webRTCService.start({ threshold: 5, maxSilenceDuration: 1000 * 60 });
       if (!success) return;
+      setIsMuted(false);
       intervalRef.current = setInterval(() => {
         setAverage(Number(webRTCService.average.toFixed(1)));
       }, 100);

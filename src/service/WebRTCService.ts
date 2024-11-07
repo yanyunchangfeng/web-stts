@@ -82,7 +82,7 @@ class WebRTCService {
   private setupMediaRecorder() {
     this.mediaRecorder = new MediaRecorder(this.stream);
     this.mediaRecorder.ondataavailable = (event) => {
-      if (!this.isMuted) this.audioChunks.push(event.data);
+      this.audioChunks.push(event.data);
     };
   }
 
