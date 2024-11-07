@@ -20,6 +20,7 @@ class WebRTCService {
     noSpeechIsError: false
   };
   private defaultMuteMessage = '录音服务未启用';
+  average = 0;
   async init(deviceId?: string) {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
@@ -226,6 +227,7 @@ class WebRTCService {
       }
       this.analyser.getByteTimeDomainData(dataArray);
       const average = this.calculateAudioAverage(dataArray);
+      this.average = average;
       console.log(average > threshold ? '有声音输入' : '无声音', average);
       if (average > threshold) {
         soundDetected = true; // 声音检测到

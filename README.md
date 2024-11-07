@@ -1,6 +1,6 @@
 [![Test Coverage](https://github.com/yanyunchangfeng/web-stts/actions/workflows/test.yml/badge.svg)](https://github.com/yanyunchangfeng/web-stts/actions/workflows/test.yml?query=branch:main) [![codecov](https://codecov.io/gh/yanyunchangfeng/web-stts/branch/main/graph/badge.svg)](https://codecov.io/gh/yanyunchangfeng/web-stts) [![Deploy](https://github.com/yanyunchangfeng/web-stts/workflows/Deploy/badge.svg)](https://github.com/yanyunchangfeng/web-stts/actions/workflows/deploy.yml)
 
-[![npm latest version](https://img.shields.io/npm/v/webpack-stts/latest.svg)](https://www.npmjs.com/package/webpack-stts)
+[![npm latest version](https://img.shields.io/npm/v/web-stts/latest.svg)](https://www.npmjs.com/package/webpack-stts)
 
 <p align="center">
     <img width="300" src="src/assets/img/yanyunchangfeng.png">
