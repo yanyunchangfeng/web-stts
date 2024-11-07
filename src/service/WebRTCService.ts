@@ -46,11 +46,7 @@ class WebRTCService {
       this.initAudioState();
       this.mediaRecorder.start();
       this.initRecordingState();
-      this.checkVoice(
-        this.defaultStartOptions.threshold,
-        this.defaultStartOptions.updateInterval,
-        this.defaultStartOptions.maxSilenceDuration
-      );
+      this.checkVoice();
       return true;
     } catch (error) {
       this.handleError('Failed to start media recording', error);
@@ -186,7 +182,11 @@ class WebRTCService {
     audio.onended = () => URL.revokeObjectURL(url);
   }
 
-  checkVoice(threshold = 20, updateInterval = 200, maxSilenceDuration = 3000) {
+  checkVoice(
+    threshold = this.defaultStartOptions.threshold || 20,
+    updateInterval = this.defaultStartOptions.updateInterval || 200,
+    maxSilenceDuration = this.defaultStartOptions.maxSilenceDuration || 3000
+  ) {
     if (!this.stream) {
       console.warn('No stream available for analysis');
       return;
@@ -222,9 +222,10 @@ class WebRTCService {
         return;
       }
       lastUpdateTime = timestamp;
-      if (this.isMuted) {
-        silenceDuration = 0;
-      }
+      // if (this.isMuted) {
+      //   requestAnimationFrame(checkAudio); // 如果静音，继续循环检测
+      //   return; // 静音时不进行阈值判断
+      // }
       this.analyser.getByteTimeDomainData(dataArray);
       const average = this.calculateAudioAverage(dataArray);
       this.average = average;
@@ -275,6 +276,8 @@ class WebRTCService {
     if (!this.isMuted) {
       this.audioTracks.forEach((track) => (track.enabled = false));
       this.isMuted = true;
+      this.mediaRecorder.pause();
+      this.stopVoiceCheck();
     }
   }
 
@@ -288,6 +291,8 @@ class WebRTCService {
     if (this.isMuted) {
       this.audioTracks.forEach((track) => (track.enabled = true));
       this.isMuted = false;
+      this.mediaRecorder.resume();
+      this.checkVoice();
     }
   }
 }
