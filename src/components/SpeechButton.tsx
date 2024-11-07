@@ -19,6 +19,7 @@ const SpeechButton: FC = () => {
   const [speechErr, setSpeechErr] = useState('');
   const [rtcResultText, setRtcResultText] = useState<string>('');
   const [isMuted, setIsMuted] = useState<boolean>(false);
+  const intervalRef = React.useRef<ReturnType<typeof setInterval>>();
   const speechResultText = useMemo(() => {
     const { interimContent, finalContent, confidence } = speechResult;
     return `
@@ -36,6 +37,8 @@ const SpeechButton: FC = () => {
   const rtcRecordingText = useMemo(() => {
     return rtcRecording ? '停止录音' : '开始录音';
   }, [rtcRecording]);
+
+  const [average, setAverage] = useState(0);
 
   const handleSpeechSynthesizer = () => {
     ttsService.speak({
@@ -101,6 +104,9 @@ const SpeechButton: FC = () => {
       }
       const success = await webRTCService.start({ threshold: 5, maxSilenceDuration: 6000 });
       if (!success) return;
+      intervalRef.current = setInterval(() => {
+        setAverage(Number(webRTCService.average.toFixed(1)));
+      }, 100);
       setRtcRecording(true);
       setRecordedAudio(null);
       setTimeout(() => {
@@ -119,6 +125,9 @@ const SpeechButton: FC = () => {
       setRtcResultText(`speechErr: ${err}`);
     } finally {
       setRtcRecording(false);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     }
   };
 
@@ -195,6 +204,7 @@ const SpeechButton: FC = () => {
       <h3>STT API 语音测试 （xunfeiSTT）</h3>
       <Space>
         <Button onClick={handleSTT}>{rtcRecordingText}</Button>
+        <Button type="text">{average}</Button>
         <Button onClick={handleStopSTT}>StopAndDiscard 录音</Button>
         <Button icon={!isMuted ? <AudioOutlined /> : <AudioMutedOutlined />} onClick={handleToggleMuted}></Button>
       </Space>

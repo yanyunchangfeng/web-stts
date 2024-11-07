@@ -6,7 +6,7 @@ class TTSService {
   speechSynthesizerService!: SpeechSynthesizerService;
   currentAudio?: HTMLAudioElement; // 当前播放的音频
   abortController = new AbortController();
-  async tts(params: TTSData, ttsAtobMode: TTSAtobMode = TTSAtobMode.JSBASE64) {
+  async tts(params: TTSData, ttsAtobMode: TTSAtobMode = TTSAtobMode.WINDOW) {
     this.stopAudio();
     const audioBase64Str = await voiceFusionRequestService.tts(params);
     const audioBlob = this.atobBase64ToBlob(audioBase64Str, ttsAtobMode); // js-base64
@@ -22,7 +22,6 @@ class TTSService {
     this.abortController.abort(); // 先中止任何现有操作
     this.abortController = new AbortController();
     const cacheAudioBase64Str = params.audioBase64;
-
     if (combTtsExecStr === CombTTSExecStrategy.BROWSER) {
       const result = await this.speak(params);
       if (!result) return;
@@ -82,10 +81,10 @@ class TTSService {
     return new Promise((resolve, reject) => {
       const cleanup = () => {
         URL.revokeObjectURL(audioUrl);
+        this.currentAudio = undefined;
         audio.removeEventListener('ended', onEnded);
         audio.removeEventListener('error', onError);
         audio.removeEventListener('timeupdate', onTimeUpdate);
-        this.currentAudio = undefined;
       };
       const onEnded = () => {
         cleanup();
@@ -98,7 +97,7 @@ class TTSService {
       const onTimeUpdate = () => {
         // 在播放过程中检查是否需要中止
         if (this.abortController.signal.aborted) {
-          this.stopAudio(); // 立即停止播放
+          this.stopAudio();
           cleanup();
           resolve();
         }
@@ -112,7 +111,6 @@ class TTSService {
       });
     });
   }
-  // 新增方法用于取消播放
   stopAudio() {
     if (this.currentAudio) {
       this.currentAudio.pause(); // 暂停音频播放
@@ -121,7 +119,7 @@ class TTSService {
     }
   }
   abortPlayAudio(reason: string = 'stop play audio') {
-    this.abortController.abort(reason); // 调用此方法以终止当前的 TTS 操作
+    this.abortController.abort(reason);
     this.speechSynthesizerService?.abortSpeak(reason);
   }
 }
