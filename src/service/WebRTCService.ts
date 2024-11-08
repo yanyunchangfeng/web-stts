@@ -17,7 +17,8 @@ class WebRTCService {
     threshold: 22,
     updateInterval: 200,
     maxSilenceDuration: 3000,
-    noSpeechIsError: false
+    noSpeechIsError: false,
+    timeSlice: 1000
   };
   private defaultMuteMessage = '录音服务未启用';
   average = 0;
@@ -41,10 +42,10 @@ class WebRTCService {
       const deviceId = await this.getDefaultAudioDeviceId();
       await this.init(deviceId);
       if (!this.stream) return false;
+      this.initAudioState();
       this.setupMediaRecorder();
       this.enAbledAudioTracks();
-      this.initAudioState();
-      this.mediaRecorder.start();
+      this.mediaRecorder.start(this.defaultStartOptions.timeSlice);
       this.initRecordingState();
       this.checkVoice();
       return true;
@@ -106,6 +107,8 @@ class WebRTCService {
   }
   private resetAudioData() {
     this.audioChunks = [];
+  }
+  private resetAudioTracks() {
     this.audioTracks = [];
   }
   private resetAudioState() {
@@ -113,11 +116,13 @@ class WebRTCService {
     this.resetAudioMuteState();
     this.resetNoSpeechState();
     this.resetAudioData();
+    this.resetAudioTracks();
   }
   private initAudioState() {
     this.resetAudioMuteState();
     this.resetNoSpeechState();
     this.resetAudioData();
+    this.resetAudioTracks();
   }
   async onResult(): Promise<Blob> {
     return new Promise((resolve, reject) => {
@@ -222,10 +227,6 @@ class WebRTCService {
         return;
       }
       lastUpdateTime = timestamp;
-      // if (this.isMuted) {
-      //   requestAnimationFrame(checkAudio); // 如果静音，继续循环检测
-      //   return; // 静音时不进行阈值判断
-      // }
       this.analyser.getByteTimeDomainData(dataArray);
       const average = this.calculateAudioAverage(dataArray);
       this.average = average;
@@ -275,8 +276,8 @@ class WebRTCService {
     }
     if (!this.isMuted) {
       this.audioTracks.forEach((track) => (track.enabled = false));
-      this.isMuted = true;
       this.mediaRecorder.pause();
+      this.isMuted = true;
       this.stopVoiceCheck();
     }
   }
@@ -290,8 +291,8 @@ class WebRTCService {
     }
     if (this.isMuted) {
       this.audioTracks.forEach((track) => (track.enabled = true));
-      this.isMuted = false;
       this.mediaRecorder.resume();
+      this.isMuted = false;
       this.checkVoice();
     }
   }
