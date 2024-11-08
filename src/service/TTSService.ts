@@ -12,12 +12,14 @@ class TTSService {
     const audioBlob = this.atobBase64ToBlob(audioBase64Str, ttsAtobMode); // js-base64
     await this.playAudio(audioBlob);
   }
+
   async speak(params: TTSData) {
     if (!this.speechSynthesizerService) {
       this.speechSynthesizerService = new SpeechSynthesizerService();
     }
     return await this.speechSynthesizerService.speak(params.text, params.lang);
   }
+
   async combineTTS(params: TTSData, combTtsExecStr: `${CombTTSExecStrategy}` = CombTTSExecStrategy.BROWSER) {
     this.abortController.abort(); // 先中止任何现有操作
     this.abortController = new AbortController();
@@ -37,17 +39,21 @@ class TTSService {
       await this.speak(params);
     }
   }
+
   async cacheBase64ToAudio(base64Str: string) {
     this.stopAudio();
     const audioBlob = this.atobBase64ToBlob(base64Str, TTSAtobMode.WINDOW);
     await this.playAudio(audioBlob);
   }
+
   jsBase64AtobStr(base64Str: string) {
     return Base64.atob(base64Str);
   }
+
   windowAtobBase64Str(base64Str: string) {
     return window.atob(base64Str);
   }
+
   atobBase64ToBlob(base64Str: string, ttsAtobMode: TTSAtobMode) {
     base64Str = this.base64StrReplace(base64Str);
     let binaryString = '';
@@ -59,10 +65,12 @@ class TTSService {
     const unit8Array = this.binaryStrToUint8Array(binaryString);
     return this.uint8ArrayToBlob(unit8Array);
   }
+
   base64StrReplace(base64Str: string) {
     // 去掉前缀b'和后缀' 不然会报错
     return base64Str.replace(/^b'/, '').replace(/'$/, '');
   }
+
   binaryStrToUint8Array(binaryString: string) {
     const len = binaryString.length;
     const bytes = new Uint8Array(len);
@@ -71,9 +79,11 @@ class TTSService {
     }
     return bytes;
   }
+
   uint8ArrayToBlob(uint8Array: Uint8Array, mimeType: AudioType = AudioType.WAV) {
     return new Blob([uint8Array], { type: mimeType });
   }
+
   async playAudio(audioBlob: Blob): Promise<void> {
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
@@ -111,6 +121,7 @@ class TTSService {
       });
     });
   }
+
   stopAudio() {
     if (this.currentAudio) {
       this.currentAudio.pause(); // 暂停音频播放
@@ -118,6 +129,7 @@ class TTSService {
       this.currentAudio = undefined; // 清空当前音频
     }
   }
+
   abortPlayAudio(reason: string = 'stop play audio') {
     this.abortController.abort(reason);
     this.speechSynthesizerService?.abortSpeak(reason);

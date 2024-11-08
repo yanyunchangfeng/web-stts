@@ -54,27 +54,32 @@ class WebRTCService {
       return false;
     }
   }
+
   private onAbort = () => {
     this.abortController.signal.removeEventListener('abort', this.onAbort);
     this.stop(); // 停止录音
   };
+
   getAudioTracks() {
     if (!this.audioTracks.length) {
       this.audioTracks = this.stream?.getAudioTracks();
     }
     return this.audioTracks;
   }
+
   delAudioTracks() {
     if (this.audioTracks.length) {
       this.stream?.removeTrack(this.audioTracks[0]); //模拟删除音频触发错误
     }
   }
+
   private enAbledAudioTracks() {
     this.getAudioTracks();
     if (this.audioTracks.length) {
       this.audioTracks[0].enabled = true;
     }
   }
+
   private async getDefaultAudioDeviceId(): Promise<string | undefined> {
     const devices = await navigator.mediaDevices.enumerateDevices();
     return devices.find((device) => device.kind === 'audioinput' && device.deviceId === 'default')?.deviceId;
@@ -90,27 +95,35 @@ class WebRTCService {
   stop() {
     this.mediaRecorder?.stop();
   }
-  abortRecording(reason = 'abort recordig and discard') {
+
+  abortRecording(reason = 'abort recording and discard') {
     this.abortController.abort(reason);
   }
+
   private resetRecordingState() {
     this.isListening = false;
   }
+
   private initRecordingState() {
     this.isListening = true;
   }
+
   private resetAudioMuteState() {
     this.isMuted = false;
   }
+
   private resetNoSpeechState() {
     this.isNoSpeech = false;
   }
+
   private resetAudioData() {
     this.audioChunks = [];
   }
+
   private resetAudioTracks() {
     this.audioTracks = [];
   }
+
   private resetAudioState() {
     this.resetRecordingState();
     this.resetAudioMuteState();
@@ -118,12 +131,14 @@ class WebRTCService {
     this.resetAudioData();
     this.resetAudioTracks();
   }
+
   private initAudioState() {
     this.resetAudioMuteState();
     this.resetNoSpeechState();
     this.resetAudioData();
     this.resetAudioTracks();
   }
+
   async onResult(): Promise<Blob> {
     return new Promise((resolve, reject) => {
       this.mediaRecorder.onstop = async () => {
@@ -166,6 +181,7 @@ class WebRTCService {
     const url = this.createObjectURL(blob);
     this.createDownloadLink(url, `${Date.now()}recording.wav`);
   }
+
   private createObjectURL(blob: Blob): string {
     return URL.createObjectURL(blob);
   }
@@ -267,6 +283,7 @@ class WebRTCService {
     }
     this.isCheckingAudio = false;
   }
+
   mute(message = this.defaultMuteMessage) {
     if (!this.isListening) {
       return {
