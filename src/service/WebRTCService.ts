@@ -315,7 +315,7 @@ class WebRTCService {
       this.checkVoice();
     }
   }
-  dispatchEvent<T>(type: string, data: T) {
+  private dispatchEvent<T>(type: string, data: T) {
     const event = new CustomEvent(type, { detail: data });
     document.dispatchEvent(event);
   }
