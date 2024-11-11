@@ -232,6 +232,14 @@ const SpeechButton: FC = () => {
     document.addEventListener('mute', handleMute, { signal: controller.signal });
   };
 
+  React.useEffect(() => {
+    // const handleBeforeUnload = (event: Event) => {
+    //   event.preventDefault();
+    //   console.log('页面重载和关闭触发');
+    // };
+    // window.addEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
   return (
     <>
       <h3>Web SpeechSynthesize API 语音测试 （底层基于浏览器语音合成引擎，无需科学上网）</h3>
