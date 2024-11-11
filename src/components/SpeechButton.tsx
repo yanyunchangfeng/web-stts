@@ -163,23 +163,75 @@ const SpeechButton: FC = () => {
     handleStopCombineTTS();
     handleStopSTT();
   };
-  const handleToggleMuted = React.useCallback(() => {
-    if (!isMuted) {
-      const result = webRTCService.mute('静音无法操作');
-      if (result) {
-        message.warning(result.message);
-        return;
-      }
-      setIsMuted(true);
-    } else {
-      const result = webRTCService.unmute('取消静音无法操作');
-      if (result) {
-        message.warning(result.message);
-        return;
-      }
-      setIsMuted(false);
+
+  // const handleToggleMuted = React.useCallback(() => {
+  //   if (!isMuted) {
+  //     const result = webRTCService.mute('静音无法操作');
+  //     if (result) {
+  //       message.warning(result.message);
+  //       return;
+  //     }
+  //     setIsMuted(true);
+  //   } else {
+  //     const result = webRTCService.unmute('取消静音无法操作');
+  //     if (result) {
+  //       message.warning(result.message);
+  //       return;
+  //     }
+  //     setIsMuted(false);
+  //   }
+  // }, [isMuted]);
+
+  const handleMuted = () => {
+    const result = webRTCService.mute('静音无法操作');
+    if (result) {
+      message.warning(result.message);
+      return;
     }
-  }, [isMuted]);
+  };
+  const handleUnMuted = () => {
+    const result = webRTCService.unmute('取消静音无法操作');
+    if (result) {
+      message.warning(result.message);
+      return;
+    }
+  };
+
+  React.useEffect(() => {
+    const controller = new AbortController();
+    const handleMute = (event: Event) => {
+      const customEvent = event as CustomEvent<{ status: boolean }>;
+      const status = customEvent.detail.status;
+      setIsMuted(status);
+      console.log('静音事件被触发:', status);
+    };
+
+    const handleUnMute = (event: Event) => {
+      const customEvent = event as CustomEvent<{ status: boolean }>;
+      const status = customEvent.detail.status;
+      setIsMuted(status);
+      console.log('取消静音事件被触发:', status);
+    };
+
+    document.addEventListener('mute', handleMute, { signal: controller.signal });
+    document.addEventListener('unmute', handleUnMute, { signal: controller.signal });
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  const handleAddMuteCustomEvent = () => {
+    const controller = new AbortController();
+    const handleMute = (event: Event) => {
+      document.removeEventListener('mute', handleMute);
+      const customEvent = event as CustomEvent<{ status: boolean }>;
+      const status = customEvent.detail.status;
+      console.log('静音事件handleAddMuteCustomEvent被触发:', status);
+      controller.abort();
+    };
+    document.addEventListener('mute', handleMute, { signal: controller.signal });
+  };
 
   return (
     <>
@@ -207,7 +259,11 @@ const SpeechButton: FC = () => {
         <Button onClick={handleSTT}>{rtcRecordingText}</Button>
         <Button type="text">{average}</Button>
         <Button onClick={handleStopSTT}>StopAndDiscard 录音</Button>
-        <Button icon={!isMuted ? <AudioOutlined /> : <AudioMutedOutlined />} onClick={handleToggleMuted}></Button>
+        {/* <Button icon={!isMuted ? <AudioOutlined /> : <AudioMutedOutlined />} onClick={handleToggleMuted}></Button> */}
+        <Button
+          icon={!isMuted ? <AudioOutlined onClick={handleMuted} /> : <AudioMutedOutlined onClick={handleUnMuted} />}
+        ></Button>
+        <Button onClick={handleAddMuteCustomEvent}>添加静音事件</Button>
       </Space>
 
       <Input.TextArea value={rtcResultText} style={{ marginTop: 12 }} autoSize={{ minRows: 2, maxRows: 6 }} />
