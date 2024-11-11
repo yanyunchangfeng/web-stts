@@ -1,3 +1,9 @@
+# [1.3.0](https://github.com/yanyunchangfeng/web-stts/compare/v1.2.0...v1.3.0) (2024-11-11)
+
+### Features
+
+- add webRTCService dispatchEvent ([02caf1f](https://github.com/yanyunchangfeng/web-stts/commit/02caf1fc0c848cbb554cdbec897140401ba49d35))
+
 # [1.2.0](https://github.com/yanyunchangfeng/web-stts/compare/v1.1.0...v1.2.0) (2024-11-07)
 
 ### Features
