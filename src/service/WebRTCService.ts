@@ -295,6 +295,7 @@ class WebRTCService {
       this.audioTracks.forEach((track) => (track.enabled = false));
       this.mediaRecorder.pause();
       this.isMuted = true;
+      this.dispatchEvent('mute', { status: this.isMuted });
       this.stopVoiceCheck();
     }
   }
@@ -310,8 +311,13 @@ class WebRTCService {
       this.audioTracks.forEach((track) => (track.enabled = true));
       this.mediaRecorder.resume();
       this.isMuted = false;
+      this.dispatchEvent('unmute', { status: this.isMuted });
       this.checkVoice();
     }
+  }
+  dispatchEvent<T>(type: string, data: T) {
+    const event = new CustomEvent(type, { detail: data });
+    document.dispatchEvent(event);
   }
 }
 
