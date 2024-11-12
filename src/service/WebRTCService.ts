@@ -12,7 +12,7 @@ class WebRTCService {
   private audioTracks: MediaStreamTrack[] = [];
   private isNoSpeech = false;
   private abortController = new AbortController();
-  private isMuted = false;
+  isMuted = false;
   private defaultStartOptions = {
     threshold: 22,
     updateInterval: 200,
@@ -22,6 +22,7 @@ class WebRTCService {
   };
   private defaultMuteMessage = '录音服务未启用';
   average = 0;
+
   async init(deviceId?: string) {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
@@ -315,6 +316,7 @@ class WebRTCService {
       this.checkVoice();
     }
   }
+
   private dispatchEvent<T>(type: string, data: T) {
     const event = new CustomEvent(type, { detail: data });
     document.dispatchEvent(event);
