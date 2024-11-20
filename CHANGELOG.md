@@ -1,3 +1,9 @@
+# [1.4.0-rc.1](https://github.com/yanyunchangfeng/web-stts/compare/v1.3.0...v1.4.0-rc.1) (2024-11-20)
+
+### Features
+
+- reset webrtcService average ([247ec0d](https://github.com/yanyunchangfeng/web-stts/commit/247ec0d8275625c095dcc1b0836cc249f536ad48))
+
 # [1.3.0](https://github.com/yanyunchangfeng/web-stts/compare/v1.2.0...v1.3.0) (2024-11-11)
 
 ### Features
