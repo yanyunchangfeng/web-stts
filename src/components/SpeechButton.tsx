@@ -1,13 +1,13 @@
 import React, { FC, useEffect, useMemo, useState } from 'react';
-import { Button, Input, Space, message } from 'antd';
+import { Button, Divider, Input, Space, message } from 'antd';
 import { AudioOutlined, AudioMutedOutlined } from '@ant-design/icons';
 import { TTSVoice, SpeechResult, CombTTSExecStrategy } from 'src/shared';
 import { ttsService, speechRecognizerService, webRTCService, voiceFusionRequestService } from 'src/service';
-import { toggleState } from 'src/utils';
+import { audioBase64 } from 'src/components/constants';
 
 const text = `《庄子》是中国道家思想的重要经典，书中通过寓言和对话探讨了自然、自由、生命和死亡的哲学。以下是《庄子》的一些核心思想：
      无为而治：强调顺应自然，不强求而为，主张自然发展的一种智慧。`;
-const audioBase64 = ``;
+
 const SpeechButton: FC = () => {
   const [speechRecording, setSpeechRecording] = useState(false);
   const [speakText, setSpeakText] = useState(text);
@@ -63,7 +63,8 @@ const SpeechButton: FC = () => {
       {
         text: speakText,
         // voc: TTSVoice.man,
-        voc: TTSVoice.woman
+        voc: TTSVoice.woman,
+        audioBase64
       },
       CombTTSExecStrategy.TTS
     );
@@ -102,7 +103,7 @@ const SpeechButton: FC = () => {
         setRtcRecording(false);
         return;
       }
-      const success = await webRTCService.start({ threshold: 5, maxSilenceDuration: 1000 * 60 });
+      const success = await webRTCService.start({ threshold: 25, maxSilenceDuration: 1000 * 3 });
       if (!success) return;
       intervalRef.current = setInterval(() => {
         setAverage(Number(webRTCService.average.toFixed(1)));
@@ -125,6 +126,7 @@ const SpeechButton: FC = () => {
       setRtcResultText(`speechErr: ${err}`);
     } finally {
       setRtcRecording(false);
+      setAverage(0);
       setIsMuted(false);
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -285,6 +287,7 @@ const SpeechButton: FC = () => {
         <Button onClick={handleSTTS}>播报录音</Button>
         <Button onClick={handleStopSTTS}>Stop 播报录音</Button>
       </Space>
+      <Divider />
     </>
   );
 };

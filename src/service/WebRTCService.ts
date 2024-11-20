@@ -298,6 +298,7 @@ class WebRTCService {
       this.isMuted = true;
       this.dispatchEvent('mute', { status: this.isMuted });
       this.stopVoiceCheck();
+      this.average = 0;
     }
   }
 
